@@ -1,0 +1,5 @@
+rootProject.name = 'tiAuth-SocialAddon'
+
+include 'common'
+include 'bungee'
+include 'velocity'
