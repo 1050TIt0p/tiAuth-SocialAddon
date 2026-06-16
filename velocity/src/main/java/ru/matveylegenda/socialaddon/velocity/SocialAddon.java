@@ -1,13 +1,14 @@
-package ru.matveylegenda.socialaddon.bungee;
+package ru.matveylegenda.socialaddon.velocity;
 
+import com.google.inject.Inject;
+import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.plugin.Dependency;
+import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
-import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
-import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginManager;
-import ru.matveylegenda.socialaddon.bungee.adapter.BungeePlatformAdapter;
-import ru.matveylegenda.socialaddon.bungee.adapter.BungeeSchedulerAdapter;
-import ru.matveylegenda.socialaddon.bungee.command.LinkCommand;
-import ru.matveylegenda.socialaddon.bungee.listener.AuthListener;
+import org.slf4j.Logger;
 import ru.matveylegenda.socialaddon.common.api.SocialPlatform;
 import ru.matveylegenda.socialaddon.common.config.MainConfig;
 import ru.matveylegenda.socialaddon.common.config.MessagesConfig;
@@ -17,16 +18,34 @@ import ru.matveylegenda.socialaddon.common.database.Database;
 import ru.matveylegenda.socialaddon.common.manager.TaskManager;
 import ru.matveylegenda.socialaddon.common.social.platform.Discord;
 import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
-import ru.matveylegenda.tiauth.bungee.api.TiAuthAPI;
-import ru.matveylegenda.tiauth.thirdparty.net.byteflux.libby.BungeeLibraryManager;
+import ru.matveylegenda.socialaddon.velocity.adapter.VelocityPlatformAdapter;
+import ru.matveylegenda.socialaddon.velocity.adapter.VelocitySchedulerAdapter;
+import ru.matveylegenda.socialaddon.velocity.command.LinkCommand;
+import ru.matveylegenda.socialaddon.velocity.listener.AuthListener;
 import ru.matveylegenda.tiauth.thirdparty.net.byteflux.libby.Library;
+import ru.matveylegenda.tiauth.thirdparty.net.byteflux.libby.VelocityLibraryManager;
+import ru.matveylegenda.tiauth.velocity.api.TiAuthAPI;
 
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
 @Getter
-public final class SocialAddon extends Plugin {
-    private BungeeAudiences audiences;
+@Plugin(
+        id = "tiauth-socialaddon",
+        name = "tiAuth-SocialAddon",
+        version = "1.0.0",
+        dependencies = {
+                @Dependency(id = "tiauth")
+        }
+)
+public class SocialAddon {
+
+    @Inject
+    private Logger logger;
+
+    @Inject
+    private ProxyServer server;
 
     private TaskManager taskManager;
     private Database database;
@@ -35,13 +54,16 @@ public final class SocialAddon extends Plugin {
     private Discord discord;
     private Telegram telegram;
 
-    @Override
-    public void onLoad() {
-        Library adventurePlatform = Library.builder()
-                .groupId("net.kyori")
-                .artifactId("adventure-platform-bungeecord")
-                .version("4.4.1")
-                .build();
+    @Subscribe
+    public void onProxyInitialization(ProxyInitializeEvent event) {
+        this.taskManager = new TaskManager(new VelocitySchedulerAdapter(this));
+        this.socialPlatform = new VelocityPlatformAdapter(server);
+        initializeDatabase();
+
+        MainConfig.IMP.reload();
+        MessagesConfig.IMP.reload();
+        DiscordConfig.IMP.reload();
+        TelegramConfig.IMP.reload();
 
         Library jda = Library.builder()
                 .groupId("net.dv8tion")
@@ -61,37 +83,23 @@ public final class SocialAddon extends Plugin {
                 .version("10.0.0")
                 .build();
 
-        BungeeLibraryManager libraryManager = new BungeeLibraryManager(this);
+        VelocityLibraryManager<SocialAddon> libraryManager = new VelocityLibraryManager<>(
+                logger,
+                Path.of("plugins/tiAuth-SocialAddon/"),
+                server.getPluginManager(),
+                this
+        );
+
         libraryManager.addMavenCentral();
-        libraryManager.loadLibrary(adventurePlatform);
         libraryManager.loadLibrary(jda);
         libraryManager.loadLibrary(telegramClient);
         libraryManager.loadLibrary(telegramLongPolling);
-    }
-
-    @Override
-    public void onEnable() {
-        this.audiences = BungeeAudiences.create(this);
-        this.taskManager = new TaskManager(new BungeeSchedulerAdapter(this));
-        this.socialPlatform = new BungeePlatformAdapter(audiences);
-        initializeDatabase();
-
-        MainConfig.IMP.reload();
-        MessagesConfig.IMP.reload();
-        DiscordConfig.IMP.reload();
-        TelegramConfig.IMP.reload();
 
         initializeDiscord();
         initializeTelegram();
 
-        PluginManager pluginManager = getProxy().getPluginManager();
-        registerListeners(pluginManager);
-        registerCommands(pluginManager);
-    }
-
-    @Override
-    public void onDisable() {
-
+        registerListeners();
+        registerCommands();
     }
 
     private void initializeDatabase() {
@@ -103,7 +111,6 @@ public final class SocialAddon extends Plugin {
             );
         } catch (SQLException e) {
             Database.LOGGER.log(Level.SEVERE, "Error during database initialization", e);
-            getProxy().stop();
         }
     }
 
@@ -112,8 +119,8 @@ public final class SocialAddon extends Plugin {
             discord = new Discord(taskManager, database, socialPlatform);
             discord.enableBot();
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Error starting the Discord bot", e);
-            getProxy().stop();
+            logger.error("Error starting the Discord bot", e);
+            server.shutdown();
         }
     }
 
@@ -122,19 +129,20 @@ public final class SocialAddon extends Plugin {
             telegram = new Telegram(taskManager, database, socialPlatform);
             telegram.enableBot();
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Error starting the Telegram bot", e);
-            getProxy().stop();
+            logger.error("Error starting the Telegram bot", e);
+            server.shutdown();
         }
     }
 
-    private void registerListeners(PluginManager pluginManager) {
-        pluginManager.registerListener(this, new AuthListener(this));
+    private void registerListeners() {
+        server.getEventManager().register(this, new AuthListener(this));
     }
 
-    private void registerCommands(PluginManager pluginManager) {
-        pluginManager.registerCommand(
-                this,
-                new LinkCommand(this, MainConfig.IMP.command)
+    private void registerCommands() {
+        CommandManager commandManager = server.getCommandManager();
+        commandManager.register(
+                commandManager.metaBuilder(MainConfig.IMP.command).build(),
+                new LinkCommand(this)
         );
     }
 }

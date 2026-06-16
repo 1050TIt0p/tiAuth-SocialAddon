@@ -5,11 +5,12 @@ plugins {
 
 allprojects {
     group = 'ru.matveylegenda'
-    version = '1.0'
+    version = '1.0.0'
 
     repositories {
         mavenCentral()
         maven { url 'https://repo.papermc.io/repository/maven-public/' }
+        maven { url 'https://jitpack.io' }
     }
 }
 
@@ -17,7 +18,18 @@ subprojects {
     apply plugin: "java"
 
     dependencies {
-        compileOnly(rootProject.files("libs/tiAuth-1.3.0.jar"))
+        compileOnly(rootProject.files("libs/tiAuth-1.3.6.jar"))
+
+        compileOnly("net.kyori:adventure-api:4.26.1")
+        compileOnly("net.kyori:adventure-text-minimessage:4.26.1")
+        compileOnly("net.kyori:adventure-text-serializer-legacy:4.26.1")
+
+        compileOnly("net.dv8tion:JDA:6.4.2")
+        compileOnly("org.telegram:telegrambots-client:10.0.0")
+        compileOnly("org.telegram:telegrambots-longpolling:10.0.0")
+
+        compileOnly("org.projectlombok:lombok:1.18.46")
+        annotationProcessor("org.projectlombok:lombok:1.18.46")
     }
 
     def targetJavaVersion = 17
