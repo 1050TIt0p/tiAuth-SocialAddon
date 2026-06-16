@@ -24,9 +24,11 @@ subprojects {
         compileOnly("net.kyori:adventure-text-minimessage:4.26.1")
         compileOnly("net.kyori:adventure-text-serializer-legacy:4.26.1")
 
-        compileOnly("net.dv8tion:JDA:6.4.2")
-        compileOnly("org.telegram:telegrambots-client:10.0.0")
-        compileOnly("org.telegram:telegrambots-longpolling:10.0.0")
+        implementation("net.dv8tion:JDA:6.4.2") {
+            exclude module: "opus-java"
+        }
+        implementation("org.telegram:telegrambots-client:10.0.0")
+        implementation("org.telegram:telegrambots-longpolling:10.0.0")
 
         compileOnly("org.projectlombok:lombok:1.18.46")
         annotationProcessor("org.projectlombok:lombok:1.18.46")
@@ -58,6 +60,24 @@ dependencies {
 
 tasks.shadowJar {
     archiveClassifier.set("")
+
+    exclude("META-INF/maven/**")
+    exclude("org/slf4j/**")
+    exclude("google/protobuf/**")
+    exclude("com/google/protobuf/**")
+    exclude("org/checkerframework/**")
+    exclude("**/package-info.class")
+
+    minimize {
+        exclude(project(":common"))
+        exclude(project(":bungee"))
+        exclude(project(":velocity"))
+
+        exclude("ru/matveylegenda/.*")
+    }
+
+    relocate("net.dv8tion", "ru.matveylegenda.socialaddon.net.dv8tion")
+    relocate("org.telegram", "ru.matveylegenda.socialaddon.org.telegram")
 }
 
 tasks.jar.enabled = false

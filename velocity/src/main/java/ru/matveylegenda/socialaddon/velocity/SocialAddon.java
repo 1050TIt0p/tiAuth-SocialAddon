@@ -22,11 +22,8 @@ import ru.matveylegenda.socialaddon.velocity.adapter.VelocityPlatformAdapter;
 import ru.matveylegenda.socialaddon.velocity.adapter.VelocitySchedulerAdapter;
 import ru.matveylegenda.socialaddon.velocity.command.LinkCommand;
 import ru.matveylegenda.socialaddon.velocity.listener.AuthListener;
-import ru.matveylegenda.tiauth.thirdparty.net.byteflux.libby.Library;
-import ru.matveylegenda.tiauth.thirdparty.net.byteflux.libby.VelocityLibraryManager;
 import ru.matveylegenda.tiauth.velocity.api.TiAuthAPI;
 
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -64,36 +61,6 @@ public class SocialAddon {
         MessagesConfig.IMP.reload();
         DiscordConfig.IMP.reload();
         TelegramConfig.IMP.reload();
-
-        Library jda = Library.builder()
-                .groupId("net.dv8tion")
-                .artifactId("JDA")
-                .version("6.4.2")
-                .build();
-
-        Library telegramClient = Library.builder()
-                .groupId("org.telegram")
-                .artifactId("telegrambots-client")
-                .version("10.0.0")
-                .build();
-
-        Library telegramLongPolling = Library.builder()
-                .groupId("org.telegram")
-                .artifactId("telegrambots-longpolling")
-                .version("10.0.0")
-                .build();
-
-        VelocityLibraryManager<SocialAddon> libraryManager = new VelocityLibraryManager<>(
-                logger,
-                Path.of("plugins/tiAuth-SocialAddon/"),
-                server.getPluginManager(),
-                this
-        );
-
-        libraryManager.addMavenCentral();
-        libraryManager.loadLibrary(jda);
-        libraryManager.loadLibrary(telegramClient);
-        libraryManager.loadLibrary(telegramLongPolling);
 
         initializeDiscord();
         initializeTelegram();

@@ -18,8 +18,6 @@ import ru.matveylegenda.socialaddon.common.manager.TaskManager;
 import ru.matveylegenda.socialaddon.common.social.platform.Discord;
 import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
 import ru.matveylegenda.tiauth.bungee.api.TiAuthAPI;
-import ru.matveylegenda.tiauth.thirdparty.net.byteflux.libby.BungeeLibraryManager;
-import ru.matveylegenda.tiauth.thirdparty.net.byteflux.libby.Library;
 
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -34,40 +32,6 @@ public final class SocialAddon extends Plugin {
 
     private Discord discord;
     private Telegram telegram;
-
-    @Override
-    public void onLoad() {
-        Library adventurePlatform = Library.builder()
-                .groupId("net.kyori")
-                .artifactId("adventure-platform-bungeecord")
-                .version("4.4.1")
-                .build();
-
-        Library jda = Library.builder()
-                .groupId("net.dv8tion")
-                .artifactId("JDA")
-                .version("6.4.2")
-                .build();
-
-        Library telegramClient = Library.builder()
-                .groupId("org.telegram")
-                .artifactId("telegrambots-client")
-                .version("10.0.0")
-                .build();
-
-        Library telegramLongPolling = Library.builder()
-                .groupId("org.telegram")
-                .artifactId("telegrambots-longpolling")
-                .version("10.0.0")
-                .build();
-
-        BungeeLibraryManager libraryManager = new BungeeLibraryManager(this);
-        libraryManager.addMavenCentral();
-        libraryManager.loadLibrary(adventurePlatform);
-        libraryManager.loadLibrary(jda);
-        libraryManager.loadLibrary(telegramClient);
-        libraryManager.loadLibrary(telegramLongPolling);
-    }
 
     @Override
     public void onEnable() {
