@@ -13,6 +13,7 @@ import ru.matveylegenda.socialaddon.common.config.social.TelegramConfig;
 import ru.matveylegenda.socialaddon.common.database.Database;
 import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
 import ru.matveylegenda.socialaddon.common.utils.Utils;
+import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.hash.Hash;
 import ru.matveylegenda.tiauth.hash.HashFactory;
@@ -222,6 +223,8 @@ public class TelegramAccountsListener {
                     player.disconnect(Utils.LEGACY.deserialize(
                             COLORIZER.colorize(MessagesConfig.IMP.denyJoin)
                     ));
+                    AuthCache.logout(playerName);
+
                     Telegram.editMessage(chatId, String.valueOf(messageId), TelegramConfig.IMP.messages.playerKicked);
                 });
             }
