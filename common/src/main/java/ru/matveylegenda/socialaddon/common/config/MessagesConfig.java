@@ -24,7 +24,7 @@ public class MessagesConfig extends YamlSerializable {
     }
 
     public String onlyForPlayer = "&#8833EC2ꜰᴀ &8» &fКоманда доступна только игрокам";
-    public String usage = "&#8833EC2ꜰᴀ &8» &fИспользование: &#8833EC2/link <discord|telegram>";
+    public String usage = "&#8833EC2ꜰᴀ &8» &fИспользование: &#8833EC/link <discord|telegram>";
     public String alreadyLinked = "&#8833EC2ꜰᴀ &8» &fВаш аккаунт уже привязан к соц. сети";
     public String allowJoin = "&#8833EC2ꜰᴀ &8» &fВход успешно выполнен";
     public String denyJoin = "&#8833EC2ꜰᴀ &8» &fВход отклонен";

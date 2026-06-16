@@ -69,7 +69,7 @@ public class MainConfig extends YamlSerializable {
     })
     public static class BossBar {
         public boolean enabled = false;
-        public String text = "&#8833EC2ꜰᴀ &8» &fОсталось &#8833EC2{time} секунд";
+        public String text = "&#8833EC2ꜰᴀ &8» &fОсталось &#8833EC{time} секунд";
         @Comment(
                 value = @CommentValue("PINK / BLUE / RED / GREEN / YELLOW / PURPLE / WHITE"),
                 at = Comment.At.SAME_LINE
@@ -88,7 +88,7 @@ public class MainConfig extends YamlSerializable {
     public static class Title {
         public boolean enabled = true;
         public String title = "&#8833EC2ꜰᴀ &8»";
-        public String subtitle = "&fОсталось &#8833EC2{time} секунд";
+        public String subtitle = "&fОсталось &#8833EC{time} секунд";
     }
 
     public ActionBar actionBar;
@@ -96,6 +96,6 @@ public class MainConfig extends YamlSerializable {
     @NewLine
     public static class ActionBar {
         public boolean enabled = false;
-        public String text = "&#8833EC2ꜰᴀ &8» &fОсталось &#8833EC2{time} секунд";
+        public String text = "&#8833EC2ꜰᴀ &8» &fОсталось &#8833EC{time} секунд";
     }
 }
