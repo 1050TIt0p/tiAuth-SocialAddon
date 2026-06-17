@@ -16,6 +16,10 @@ public abstract class Social {
 
     public abstract void enableBot() throws Exception;
     public abstract void checkPlayer(String id, SocialPlayer player, boolean twoFaEnabled, boolean alertEnabled);
+
+    public TaskManager getTaskManager() {
+        return taskManager;
+    }
     public abstract boolean isEnabled();
 
     public void checkPlayer(SocialPlayer player, String socialId, boolean twoFaEnabled, boolean alertEnabled) {
