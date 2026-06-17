@@ -48,7 +48,7 @@ public class Discord extends Social {
                 )
                 .addEventListeners(
                         new DiscordCodeListener(database),
-                        new DiscordAllowJoinListener(socialPlatform),
+                        new DiscordAllowJoinListener(socialPlatform, getTaskManager()),
                         new DiscordUnlinkListener(database),
                         new DiscordAlertListener(database),
                         new DiscordTwoFaListener(database)
