@@ -42,6 +42,13 @@ public class VelocitySocialPlayer implements SocialPlayer {
     }
 
     @Override
+    public String getVirtualHostString() {
+        return handle.getVirtualHost()
+                .map(addr -> addr.getHostString())
+                .orElse(null);
+    }
+
+    @Override
     public void disconnect(Component component) {
         handle.disconnect(component);
     }

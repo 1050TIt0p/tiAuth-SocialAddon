@@ -46,6 +46,12 @@ public class BungeeSocialPlayer implements SocialPlayer {
     }
 
     @Override
+    public String getVirtualHostString() {
+        InetSocketAddress virtualHost = handle.getPendingConnection().getVirtualHost();
+        return virtualHost != null ? virtualHost.getHostString() : null;
+    }
+
+    @Override
     public void disconnect(Component component) {
         String message = LegacyComponentSerializer.builder()
                 .character(Utils.COLOR_CHAR)

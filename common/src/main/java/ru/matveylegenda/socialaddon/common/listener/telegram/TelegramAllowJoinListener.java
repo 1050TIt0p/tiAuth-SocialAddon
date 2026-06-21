@@ -46,7 +46,13 @@ public class TelegramAllowJoinListener {
 
             AuthCache.setAuthenticated(playerName);
             SessionCache.addPlayer(playerName, player.getIp());
-            player.connect(MainConfig.IMP.servers.backend);
+
+            String virtualHost = player.getVirtualHostString();
+            String forcedHost = virtualHost != null
+                    ? MainConfig.IMP.servers.forcedHosts.get(virtualHost.toLowerCase())
+                    : null;
+            String targetServer = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
+            player.connect(targetServer);
             player.sendMessage(Utils.LEGACY.deserialize(
                     COLORIZER.colorize(MessagesConfig.IMP.allowJoin)
             ));
