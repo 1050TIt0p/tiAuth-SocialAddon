@@ -9,7 +9,6 @@ import ru.matveylegenda.socialaddon.common.config.social.DiscordConfig;
 import ru.matveylegenda.socialaddon.common.utils.Utils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
-import ru.matveylegenda.tiauth.config.MainConfig;
 
 import static ru.matveylegenda.tiauth.util.Utils.COLORIZER;
 
@@ -44,13 +43,7 @@ public class DiscordAllowJoinListener extends ListenerAdapter {
 
             AuthCache.setAuthenticated(playerName);
             SessionCache.addPlayer(playerName, player.getIp());
-
-            String virtualHost = player.getVirtualHostString();
-            String forcedHost = virtualHost != null
-                    ? MainConfig.IMP.servers.forcedHosts.get(virtualHost.toLowerCase())
-                    : null;
-            String targetServer = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
-            player.connect(targetServer);
+            player.connect();
             player.sendMessage(Utils.LEGACY.deserialize(
                     COLORIZER.colorize(MessagesConfig.IMP.allowJoin)
             ));

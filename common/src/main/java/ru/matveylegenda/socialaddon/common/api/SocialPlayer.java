@@ -11,6 +11,5 @@ public interface SocialPlayer extends ForwardingAudience.Single {
     String getIp();
     boolean isOnline();
     void disconnect(Component component);
-    void connect(String serverName);
-    String getVirtualHostString();
+    void connect();
 }
