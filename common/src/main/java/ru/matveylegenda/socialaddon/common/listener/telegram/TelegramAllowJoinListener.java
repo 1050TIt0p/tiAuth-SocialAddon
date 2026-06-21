@@ -10,7 +10,6 @@ import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
 import ru.matveylegenda.socialaddon.common.utils.Utils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
-import ru.matveylegenda.tiauth.config.MainConfig;
 
 import static ru.matveylegenda.tiauth.util.Utils.COLORIZER;
 
@@ -46,7 +45,7 @@ public class TelegramAllowJoinListener {
 
             AuthCache.setAuthenticated(playerName);
             SessionCache.addPlayer(playerName, player.getIp());
-            player.connect(MainConfig.IMP.servers.backend);
+            player.connect();
             player.sendMessage(Utils.LEGACY.deserialize(
                     COLORIZER.colorize(MessagesConfig.IMP.allowJoin)
             ));
