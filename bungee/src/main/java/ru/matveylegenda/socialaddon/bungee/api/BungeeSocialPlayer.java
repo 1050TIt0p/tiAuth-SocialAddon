@@ -14,6 +14,7 @@ import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.util.Utils;
 
 import java.net.InetSocketAddress;
+import java.util.Optional;
 import java.util.UUID;
 
 public class BungeeSocialPlayer implements SocialPlayer {
@@ -60,12 +61,9 @@ public class BungeeSocialPlayer implements SocialPlayer {
 
     @Override
     public void connect() {
-        InetSocketAddress virtualHost = handle.getPendingConnection().getVirtualHost();
-        String virtualHostString = virtualHost != null ? virtualHost.getHostString() : null;
-        String forcedHost = virtualHostString != null
-                ? MainConfig.IMP.servers.forcedHosts.get(virtualHostString.toLowerCase())
-                : null;
-        String targetServer = forcedHost != null ? forcedHost : MainConfig.IMP.servers.backend;
+        String targetServer = Optional.ofNullable(handle.getPendingConnection().getVirtualHost())
+                .flatMap(addr -> Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase())))
+                .orElse(MainConfig.IMP.servers.backend);
 
         ServerInfo server = ProxyServer.getInstance().getServerInfo(targetServer);
         if (server != null) {
