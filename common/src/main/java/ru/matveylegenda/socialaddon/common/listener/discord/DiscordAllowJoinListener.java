@@ -6,6 +6,7 @@ import ru.matveylegenda.socialaddon.common.api.SocialPlatform;
 import ru.matveylegenda.socialaddon.common.api.SocialPlayer;
 import ru.matveylegenda.socialaddon.common.config.MessagesConfig;
 import ru.matveylegenda.socialaddon.common.config.social.DiscordConfig;
+import ru.matveylegenda.socialaddon.common.manager.TaskManager;
 import ru.matveylegenda.socialaddon.common.utils.Utils;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
@@ -14,9 +15,11 @@ import static ru.matveylegenda.tiauth.util.Utils.COLORIZER;
 
 public class DiscordAllowJoinListener extends ListenerAdapter {
     private final SocialPlatform socialPlatform;
+    private final TaskManager taskManager;
 
-    public DiscordAllowJoinListener(SocialPlatform socialPlatform) {
+    public DiscordAllowJoinListener(SocialPlatform socialPlatform, TaskManager taskManager) {
         this.socialPlatform = socialPlatform;
+        this.taskManager = taskManager;
     }
 
     @Override
@@ -43,6 +46,7 @@ public class DiscordAllowJoinListener extends ListenerAdapter {
 
             AuthCache.setAuthenticated(playerName);
             SessionCache.addPlayer(playerName, player.getIp());
+            taskManager.cancelTasks(player);
             player.connect();
             player.sendMessage(Utils.LEGACY.deserialize(
                     COLORIZER.colorize(MessagesConfig.IMP.allowJoin)
