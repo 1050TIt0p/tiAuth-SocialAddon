@@ -1,31 +1,33 @@
 plugins {
-    id("java")
-    id("com.gradleup.shadow") version "9.1.0"
+    java
+    id("com.gradleup.shadow") version "9.4.2"
 }
 
+val targetJavaVersion = 21
+
 allprojects {
-    group = 'ru.matveylegenda'
-    version = '1.0.1'
+    group = "ru.matveylegenda"
+    version = "1.0.1"
 
     repositories {
         mavenCentral()
-        maven { url 'https://repo.papermc.io/repository/maven-public/' }
-        maven { url 'https://jitpack.io' }
+        maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://jitpack.io")
     }
 }
 
 subprojects {
-    apply plugin: "java"
+    pluginManager.apply("java")
 
     dependencies {
         compileOnly(rootProject.files("libs/tiAuth-1.4.0.jar"))
 
-        compileOnly("net.kyori:adventure-api:4.26.1")
-        compileOnly("net.kyori:adventure-text-minimessage:4.26.1")
-        compileOnly("net.kyori:adventure-text-serializer-legacy:4.26.1")
+        compileOnly("net.kyori:adventure-api:5.1.1")
+        compileOnly("net.kyori:adventure-text-minimessage:5.1.1")
+        compileOnly("net.kyori:adventure-text-serializer-legacy:5.1.1")
 
         implementation("net.dv8tion:JDA:6.4.2") {
-            exclude module: "opus-java"
+            exclude(module = "opus-java")
         }
         implementation("org.telegram:telegrambots-client:10.0.0")
         implementation("org.telegram:telegrambots-longpolling:10.0.0")
@@ -34,21 +36,20 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.46")
     }
 
-    def targetJavaVersion = 17
-    java {
-        def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    extensions.configure<JavaPluginExtension> {
+        val javaVersion = JavaVersion.toVersion(targetJavaVersion)
+
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
+
         if (JavaVersion.current() < javaVersion) {
-            toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+            toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
         }
     }
 
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
-        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-            options.release.set(targetJavaVersion)
-        }
+    tasks.withType<JavaCompile>().configureEach {
+        options.encoding = "UTF-8"
+        options.release.set(targetJavaVersion)
     }
 }
 
@@ -80,5 +81,10 @@ tasks.shadowJar {
     relocate("org.telegram", "ru.matveylegenda.socialaddon.org.telegram")
 }
 
-tasks.jar.enabled = false
-tasks.build.dependsOn tasks.shadowJar
+tasks.jar {
+    enabled = false
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}
