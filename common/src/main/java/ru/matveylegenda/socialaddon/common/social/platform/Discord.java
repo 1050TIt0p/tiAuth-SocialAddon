@@ -35,7 +35,7 @@ public class Discord extends Social {
     }
 
     @Override
-    public void enableBot() throws Exception {
+    public void enableBot() {
         if (!isEnabled()) {
             return;
         }

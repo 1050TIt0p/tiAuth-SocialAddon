@@ -102,6 +102,8 @@ public class AuthListener {
 
     @Subscribe
     public void onPlayerRegister(PlayerRegisterEvent event) {
+        if (event.isForceLogin()) return;
+
         Player player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());
@@ -129,6 +131,8 @@ public class AuthListener {
 
     @Subscribe
     public void onPlayerAuth(PlayerAuthEvent event) {
+        if (event.isForceLogin()) return;
+
         Player player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());

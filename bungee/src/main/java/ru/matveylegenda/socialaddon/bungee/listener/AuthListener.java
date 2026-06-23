@@ -98,6 +98,8 @@ public class AuthListener implements Listener {
 
     @EventHandler
     public void onPlayerRegister(PlayerRegisterEvent event) {
+        if (event.isForceLogin()) return;
+
         ProxiedPlayer player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());
@@ -125,6 +127,8 @@ public class AuthListener implements Listener {
 
     @EventHandler
     public void onPlayerAuth(PlayerAuthEvent event) {
+        if (event.isForceLogin()) return;
+
         ProxiedPlayer player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());
