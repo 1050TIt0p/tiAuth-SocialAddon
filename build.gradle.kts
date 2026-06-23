@@ -7,7 +7,7 @@ val targetJavaVersion = 21
 
 allprojects {
     group = "ru.matveylegenda"
-    version = "1.0.1"
+    version = "1.0.2"
 
     repositories {
         mavenCentral()
@@ -20,7 +20,7 @@ subprojects {
     pluginManager.apply("java")
 
     dependencies {
-        compileOnly(rootProject.files("libs/tiAuth-1.4.0.jar"))
+        compileOnly(rootProject.files("libs/tiAuth-1.4.1.jar"))
 
         compileOnly("net.kyori:adventure-api:5.1.1")
         compileOnly("net.kyori:adventure-text-minimessage:5.1.1")

@@ -31,7 +31,7 @@ import java.util.logging.Level;
 @Plugin(
         id = "tiauth-socialaddon",
         name = "tiAuth-SocialAddon",
-        version = "1.0.1",
+        version = "1.0.2",
         dependencies = {
                 @Dependency(id = "tiauth")
         }
