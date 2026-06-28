@@ -193,13 +193,11 @@ public class TelegramAccountsListener {
 
                     String newPass = generatePassword();
                     Hash hash = HashFactory.create(MainConfig.IMP.auth.hashAlgorithm);
-                    database.getAuthDatabase().getAuthUserRepository().updatePassword(playerName, hash.hashPassword(newPass), success -> {
-                        if (!success) {
-                            Telegram.editMessage(chatId, String.valueOf(messageId), TelegramConfig.IMP.messages.queryError);
-                            return;
-                        }
-
+                    database.getAuthDatabase().getAuthUserRepository().updatePassword(playerName, hash.hashPassword(newPass)).thenRun(() -> {
                         Telegram.editMessage(chatId, String.valueOf(messageId), TelegramConfig.IMP.messages.newPassword.replace("{password}", newPass));
+                    }).exceptionally(e -> {
+                        Telegram.editMessage(chatId, String.valueOf(messageId), TelegramConfig.IMP.messages.queryError);
+                        return null;
                     });
                 });
             }
