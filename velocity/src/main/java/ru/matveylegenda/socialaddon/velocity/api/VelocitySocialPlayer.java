@@ -7,6 +7,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import ru.matveylegenda.socialaddon.common.api.SocialPlayer;
+import ru.matveylegenda.tiauth.config.MainConfig;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -47,16 +48,27 @@ public class VelocitySocialPlayer implements SocialPlayer {
     }
 
     @Override
-    public void connect(String serverName) {
-        Optional<RegisteredServer> server = proxy.getServer(serverName);
-        if (server.isPresent()) {
-            handle.createConnectionRequest(server.get()).connect();
-        }
+    public void connect() {
+        getBackend().ifPresent(server -> handle.createConnectionRequest(server).connect());
+    }
+
+    private Optional<RegisteredServer> getBackend() {
+        return getForcedBackend()
+                .or(this::getDefaultBackend);
+    }
+
+    private Optional<RegisteredServer> getForcedBackend() {
+        return handle.getVirtualHost()
+                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
+                .flatMap(proxy::getServer);
+    }
+
+    private Optional<RegisteredServer> getDefaultBackend() {
+        return proxy.getServer(MainConfig.IMP.servers.backend);
     }
 
     @Override
     public @NotNull Audience audience() {
-        // В Velocity Player уже наследует Audience
         return handle;
     }
 }

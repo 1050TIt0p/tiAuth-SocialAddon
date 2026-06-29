@@ -35,7 +35,7 @@ public class Discord extends Social {
     }
 
     @Override
-    public void enableBot() throws Exception {
+    public void enableBot() {
         if (!isEnabled()) {
             return;
         }
@@ -48,7 +48,7 @@ public class Discord extends Social {
                 )
                 .addEventListeners(
                         new DiscordCodeListener(database),
-                        new DiscordAllowJoinListener(socialPlatform),
+                        new DiscordAllowJoinListener(socialPlatform, taskManager),
                         new DiscordUnlinkListener(database),
                         new DiscordAlertListener(database),
                         new DiscordTwoFaListener(database)

@@ -10,9 +10,11 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.jetbrains.annotations.NotNull;
 import ru.matveylegenda.socialaddon.common.api.SocialPlayer;
+import ru.matveylegenda.tiauth.config.MainConfig;
 import ru.matveylegenda.tiauth.util.Utils;
 
 import java.net.InetSocketAddress;
+import java.util.Optional;
 import java.util.UUID;
 
 public class BungeeSocialPlayer implements SocialPlayer {
@@ -58,11 +60,23 @@ public class BungeeSocialPlayer implements SocialPlayer {
     }
 
     @Override
-    public void connect(String serverName) {
-        ServerInfo server = ProxyServer.getInstance().getServerInfo(serverName);
-        if (server != null) {
-            handle.connect(server);
-        }
+    public void connect() {
+        getBackend().ifPresent(handle::connect);
+    }
+
+    private Optional<ServerInfo> getBackend() {
+        return getForcedBackend()
+                .or(this::getDefaultBackend);
+    }
+
+    private Optional<ServerInfo> getForcedBackend() {
+        return Optional.ofNullable(handle.getPendingConnection().getVirtualHost())
+                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
+                .flatMap(server -> Optional.ofNullable(ProxyServer.getInstance().getServerInfo(server)));
+    }
+
+    private Optional<ServerInfo> getDefaultBackend() {
+        return Optional.ofNullable(ProxyServer.getInstance().getServerInfo(MainConfig.IMP.servers.backend));
     }
 
     @Override

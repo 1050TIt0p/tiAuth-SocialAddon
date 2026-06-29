@@ -8,7 +8,7 @@ import ru.matveylegenda.socialaddon.common.utils.Utils;
 import static ru.matveylegenda.tiauth.util.Utils.COLORIZER;
 
 public abstract class Social {
-    private final TaskManager taskManager;
+    protected final TaskManager taskManager;
 
     public Social(TaskManager taskManager) {
         this.taskManager = taskManager;

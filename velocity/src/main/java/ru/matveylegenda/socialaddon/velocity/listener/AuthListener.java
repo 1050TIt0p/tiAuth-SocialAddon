@@ -18,8 +18,10 @@ import ru.matveylegenda.socialaddon.velocity.SocialAddon;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
+import ru.matveylegenda.tiauth.velocity.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.velocity.api.event.PlayerAuthEvent;
 import ru.matveylegenda.tiauth.velocity.api.event.PlayerRegisterEvent;
+import ru.matveylegenda.tiauth.velocity.manager.AuthManager;
 
 import java.util.Map;
 import java.util.Optional;
@@ -35,11 +37,13 @@ public class AuthListener {
 
     private final Discord discord;
     private final Telegram telegram;
+    private final AuthManager authManager;
 
     public AuthListener(SocialAddon plugin) {
         this.plugin = plugin;
         this.discord = plugin.getDiscord();
         this.telegram = plugin.getTelegram();
+        this.authManager = TiAuthAPI.getInstance().getAuthManager();
     }
 
     @Subscribe(priority = -100)
@@ -62,6 +66,7 @@ public class AuthListener {
     public void onPlayerDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
         userCache.remove(player.getUniqueId());
+        authManager.clearPendingVerification(player.getUsername());
     }
 
     @Subscribe
@@ -97,11 +102,14 @@ public class AuthListener {
         if (!event.getServer().getServerInfo().getName().equals(MainConfig.IMP.servers.auth) &&
                 AuthCache.isAuthenticated(player.getUsername())) {
             plugin.getTaskManager().cancelTasks(socialPlayer);
+            authManager.clearPendingVerification(player.getUsername());
         }
     }
 
     @Subscribe
     public void onPlayerRegister(PlayerRegisterEvent event) {
+        if (event.isForceLogin()) return;
+
         Player player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());
@@ -113,6 +121,7 @@ public class AuthListener {
         if (data.discordUser != null) {
             discord.checkPlayer(socialPlayer, data.discordUser.getDiscordId(), data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (!data.discordUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -120,6 +129,7 @@ public class AuthListener {
         } else if (data.telegramUser != null) {
             telegram.checkPlayer(socialPlayer, data.telegramUser.getTelegramId(), data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (!data.telegramUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -129,6 +139,8 @@ public class AuthListener {
 
     @Subscribe
     public void onPlayerAuth(PlayerAuthEvent event) {
+        if (event.isForceLogin()) return;
+
         Player player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());
@@ -140,6 +152,7 @@ public class AuthListener {
         if (data.discordUser != null) {
             discord.checkPlayer(socialPlayer, data.discordUser.getDiscordId(), data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (data.discordUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -147,6 +160,7 @@ public class AuthListener {
         } else if (data.telegramUser != null) {
             telegram.checkPlayer(socialPlayer, data.telegramUser.getTelegramId(), data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (data.telegramUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());

@@ -17,8 +17,10 @@ import ru.matveylegenda.socialaddon.common.database.model.DiscordUser;
 import ru.matveylegenda.socialaddon.common.database.model.TelegramUser;
 import ru.matveylegenda.socialaddon.common.social.platform.Discord;
 import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
+import ru.matveylegenda.tiauth.bungee.api.TiAuthAPI;
 import ru.matveylegenda.tiauth.bungee.api.event.PlayerAuthEvent;
 import ru.matveylegenda.tiauth.bungee.api.event.PlayerRegisterEvent;
+import ru.matveylegenda.tiauth.bungee.manager.AuthManager;
 import ru.matveylegenda.tiauth.cache.AuthCache;
 import ru.matveylegenda.tiauth.cache.SessionCache;
 import ru.matveylegenda.tiauth.config.MainConfig;
@@ -36,11 +38,13 @@ public class AuthListener implements Listener {
 
     private final Discord discord;
     private final Telegram telegram;
+    private final AuthManager authManager;
 
     public AuthListener(SocialAddon plugin) {
         this.plugin = plugin;
         this.discord = plugin.getDiscord();
         this.telegram = plugin.getTelegram();
+        this.authManager = TiAuthAPI.getInstance().getAuthManager();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -63,6 +67,7 @@ public class AuthListener implements Listener {
     public void onPlayerDisconnect(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
         userCache.remove(player.getUniqueId());
+        authManager.clearPendingVerification(player.getName());
     }
 
     @EventHandler
@@ -93,11 +98,14 @@ public class AuthListener implements Listener {
         if (!event.getServer().getInfo().getName().equals(MainConfig.IMP.servers.auth) &&
                 AuthCache.isAuthenticated(player.getName())) {
             plugin.getTaskManager().cancelTasks(socialPlayer);
+            authManager.clearPendingVerification(player.getName());
         }
     }
 
     @EventHandler
     public void onPlayerRegister(PlayerRegisterEvent event) {
+        if (event.isForceLogin()) return;
+
         ProxiedPlayer player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());
@@ -109,6 +117,7 @@ public class AuthListener implements Listener {
         if (data.discordUser != null) {
             discord.checkPlayer(socialPlayer, data.discordUser.getDiscordId(), data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (!data.discordUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());
@@ -116,6 +125,7 @@ public class AuthListener implements Listener {
         } else if (data.telegramUser != null) {
             telegram.checkPlayer(socialPlayer, data.telegramUser.getTelegramId(), data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (!data.telegramUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());
@@ -125,6 +135,8 @@ public class AuthListener implements Listener {
 
     @EventHandler
     public void onPlayerAuth(PlayerAuthEvent event) {
+        if (event.isForceLogin()) return;
+
         ProxiedPlayer player = event.getPlayer();
 
         SocialUserData data = userCache.get(player.getUniqueId());
@@ -136,6 +148,7 @@ public class AuthListener implements Listener {
         if (data.discordUser != null) {
             discord.checkPlayer(socialPlayer, data.discordUser.getDiscordId(), data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (data.discordUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());
@@ -143,6 +156,7 @@ public class AuthListener implements Listener {
         } else if (data.telegramUser != null) {
             telegram.checkPlayer(socialPlayer, data.telegramUser.getTelegramId(), data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (data.telegramUser.isTwoFa()) {
+                authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());

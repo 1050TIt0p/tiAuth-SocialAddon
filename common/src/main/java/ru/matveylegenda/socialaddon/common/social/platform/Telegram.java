@@ -88,7 +88,7 @@ public class Telegram extends Social implements LongPollingSingleThreadUpdateCon
         botApplication.registerBot(TelegramConfig.IMP.token, this);
 
         this.codeListener = new TelegramCodeListener(database);
-        this.allowJoinListener = new TelegramAllowJoinListener(socialPlatform);
+        this.allowJoinListener = new TelegramAllowJoinListener(socialPlatform, taskManager);
         this.unlinkListener = new TelegramUnlinkListener(database);
         this.startListener = new TelegramStartListener();
         this.accountsListener = new TelegramAccountsListener(database, socialPlatform);
