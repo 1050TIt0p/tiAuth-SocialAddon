@@ -49,12 +49,22 @@ public class VelocitySocialPlayer implements SocialPlayer {
 
     @Override
     public void connect() {
-        String targetServer = handle.getVirtualHost()
-                .flatMap(addr -> Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase())))
-                .orElse(MainConfig.IMP.servers.backend);
+        getBackend().ifPresent(server -> handle.createConnectionRequest(server).connect());
+    }
 
-        Optional<RegisteredServer> server = proxy.getServer(targetServer);
-        server.ifPresent(registeredServer -> handle.createConnectionRequest(registeredServer).connect());
+    private Optional<RegisteredServer> getBackend() {
+        return getForcedBackend()
+                .or(this::getDefaultBackend);
+    }
+
+    private Optional<RegisteredServer> getForcedBackend() {
+        return handle.getVirtualHost()
+                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
+                .flatMap(proxy::getServer);
+    }
+
+    private Optional<RegisteredServer> getDefaultBackend() {
+        return proxy.getServer(MainConfig.IMP.servers.backend);
     }
 
     @Override

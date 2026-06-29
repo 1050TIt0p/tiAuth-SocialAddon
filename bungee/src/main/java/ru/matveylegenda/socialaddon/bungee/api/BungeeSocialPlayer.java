@@ -61,14 +61,22 @@ public class BungeeSocialPlayer implements SocialPlayer {
 
     @Override
     public void connect() {
-        String targetServer = Optional.ofNullable(handle.getPendingConnection().getVirtualHost())
-                .flatMap(addr -> Optional.ofNullable(MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase())))
-                .orElse(MainConfig.IMP.servers.backend);
+        getBackend().ifPresent(handle::connect);
+    }
 
-        ServerInfo server = ProxyServer.getInstance().getServerInfo(targetServer);
-        if (server != null) {
-            handle.connect(server);
-        }
+    private Optional<ServerInfo> getBackend() {
+        return getForcedBackend()
+                .or(this::getDefaultBackend);
+    }
+
+    private Optional<ServerInfo> getForcedBackend() {
+        return Optional.ofNullable(handle.getPendingConnection().getVirtualHost())
+                .map(addr -> MainConfig.IMP.servers.forcedHosts.get(addr.getHostString().toLowerCase()))
+                .flatMap(ProxyServer.getInstance()::getServerInfo);
+    }
+
+    private Optional<ServerInfo> getDefaultBackend() {
+        return Optional.ofNullable(ProxyServer.getInstance().getServerInfo(MainConfig.IMP.servers.backend));
     }
 
     @Override
