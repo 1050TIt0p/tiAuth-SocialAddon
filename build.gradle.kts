@@ -22,9 +22,9 @@ subprojects {
     dependencies {
         compileOnly(rootProject.files("libs/tiAuth-1.4.1.jar"))
 
-        compileOnly("net.kyori:adventure-api:5.1.1")
-        compileOnly("net.kyori:adventure-text-minimessage:5.1.1")
-        compileOnly("net.kyori:adventure-text-serializer-legacy:5.1.1")
+        compileOnly("net.kyori:adventure-api:5.2.0")
+        compileOnly("net.kyori:adventure-text-minimessage:5.2.0")
+        compileOnly("net.kyori:adventure-text-serializer-legacy:5.2.0")
 
         implementation("net.dv8tion:JDA:6.4.2") {
             exclude(module = "opus-java")
