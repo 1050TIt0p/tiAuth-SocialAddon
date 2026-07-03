@@ -115,20 +115,24 @@ public class AuthListener implements Listener {
         if (socialPlayer == null) return;
 
         if (data.discordUser != null) {
-            discord.checkPlayer(socialPlayer, data.discordUser.getDiscordId(), data.discordUser.isTwoFa(), data.discordUser.isAlert());
+            discord.checkPlayer(data.discordUser.getDiscordId(), socialPlayer, data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (!data.discordUser.isTwoFa()) {
                 authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());
+            } else {
+                discord.startTasks(socialPlayer);
             }
         } else if (data.telegramUser != null) {
-            telegram.checkPlayer(socialPlayer, data.telegramUser.getTelegramId(), data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
+            telegram.checkPlayer(data.telegramUser.getTelegramId(), socialPlayer, data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (!data.telegramUser.isTwoFa()) {
                 authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());
+            } else {
+                telegram.startTasks(socialPlayer);
             }
         }
     }
@@ -146,20 +150,22 @@ public class AuthListener implements Listener {
         if (socialPlayer == null) return;
 
         if (data.discordUser != null) {
-            discord.checkPlayer(socialPlayer, data.discordUser.getDiscordId(), data.discordUser.isTwoFa(), data.discordUser.isAlert());
+            discord.checkPlayer(data.discordUser.getDiscordId(), socialPlayer, data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (data.discordUser.isTwoFa()) {
                 authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());
+                discord.startTasks(socialPlayer);
             }
         } else if (data.telegramUser != null) {
-            telegram.checkPlayer(socialPlayer, data.telegramUser.getTelegramId(), data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
+            telegram.checkPlayer(data.telegramUser.getTelegramId(), socialPlayer, data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (data.telegramUser.isTwoFa()) {
                 authManager.setPendingVerification(player.getName());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getName());
                 SessionCache.removePlayer(player.getName());
+                telegram.startTasks(socialPlayer);
             }
         }
     }

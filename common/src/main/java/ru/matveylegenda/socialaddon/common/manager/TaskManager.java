@@ -9,8 +9,6 @@ import ru.matveylegenda.socialaddon.common.api.scheduler.SocialTask;
 import ru.matveylegenda.socialaddon.common.config.MainConfig;
 import ru.matveylegenda.socialaddon.common.config.MessagesConfig;
 import ru.matveylegenda.socialaddon.common.utils.Utils;
-import ru.matveylegenda.tiauth.velocity.util.VelocityUtils;
-
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -108,10 +106,10 @@ public class TaskManager {
     private void sendTitle(SocialPlayer player, int counter) {
         Title componentTitle = Title.title(
                 Utils.LEGACY.deserialize(COLORIZER.colorize(MainConfig.IMP.title.title)).replaceText(builder -> builder
-                        .match(VelocityUtils.TIME)
+                        .match(Utils.TIME)
                         .replacement(String.valueOf(counter))),
                 Utils.LEGACY.deserialize(COLORIZER.colorize(MainConfig.IMP.title.subtitle)).replaceText(builder -> builder
-                        .match(VelocityUtils.TIME)
+                        .match(Utils.TIME)
                         .replacement(String.valueOf(counter))),
                 Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(1050), Duration.ofMillis(0))
         );
@@ -120,7 +118,7 @@ public class TaskManager {
 
     private void sendActionBar(SocialPlayer player, int counter) {
         Component comp = Utils.LEGACY.deserialize(COLORIZER.colorize(MainConfig.IMP.actionBar.text)).replaceText(builder -> builder
-                .match(VelocityUtils.TIME)
+                .match(Utils.TIME)
                 .replacement(String.valueOf(counter)));
         player.sendActionBar(comp);
     }
@@ -129,7 +127,7 @@ public class TaskManager {
         BossBar bar = bossBars.get(player.getUniqueId());
         if (bar != null) {
             bar.name(Utils.LEGACY.deserialize(COLORIZER.colorize(MainConfig.IMP.bossBar.text)).replaceText(builder -> builder
-                    .match(VelocityUtils.TIME)
+                    .match(Utils.TIME)
                     .replacement(String.valueOf(counter))));
             bar.progress((float) counter / (float) MainConfig.IMP.timeoutSeconds);
         }

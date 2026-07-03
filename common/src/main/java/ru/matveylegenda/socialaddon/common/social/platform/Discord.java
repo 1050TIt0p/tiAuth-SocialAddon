@@ -21,6 +21,7 @@ import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
+import java.util.concurrent.CompletableFuture;
 
 public class Discord extends Social {
     @Getter
@@ -82,7 +83,9 @@ public class Discord extends Social {
     }
 
     @Override
-    public void checkPlayer(String socialId, SocialPlayer player, boolean twoFaEnabled, boolean alertEnabled) {
+    public CompletableFuture<Void> checkPlayer(String socialId, SocialPlayer player, boolean twoFaEnabled, boolean alertEnabled) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
         if (twoFaEnabled) {
             Button allowButton = Button.primary("allow-" + player.getName(), DiscordConfig.IMP.messages.twoFaAlert.buttons.allow.text)
                     .withStyle(DiscordConfig.IMP.messages.twoFaAlert.buttons.allow.style)
@@ -92,24 +95,30 @@ public class Discord extends Social {
                     .withStyle(DiscordConfig.IMP.messages.twoFaAlert.buttons.deny.style)
                     .withEmoji(Emoji.fromUnicode(DiscordConfig.IMP.messages.twoFaAlert.buttons.deny.emoji));
 
-            jda.openPrivateChannelById(socialId).queue(channel -> {
-                channel.sendMessage(
-                        DiscordConfig.IMP.messages.twoFaAlert.message
-                                .replace("{player}", player.getName())
-                                .replace("{ip}", player.getIp())
-                ).setComponents(
-                        ActionRow.of(allowButton, denyButton)
-                ).queue();
-            });
+            jda.openPrivateChannelById(socialId).queue(
+                    channel -> channel.sendMessage(
+                            DiscordConfig.IMP.messages.twoFaAlert.message
+                                    .replace("{player}", player.getName())
+                                    .replace("{ip}", player.getIp())
+                    ).setComponents(
+                            ActionRow.of(allowButton, denyButton)
+                    ).queue(msg -> future.complete(null), future::completeExceptionally),
+                    future::completeExceptionally
+            );
         } else if (alertEnabled) {
-            jda.openPrivateChannelById(socialId).queue(channel -> {
-                channel.sendMessage(
-                        DiscordConfig.IMP.messages.alert
-                                .replace("{player}", player.getName())
-                                .replace("{ip}", player.getIp())
-                ).queue();
-            });
+            jda.openPrivateChannelById(socialId).queue(
+                    channel -> channel.sendMessage(
+                            DiscordConfig.IMP.messages.alert
+                                    .replace("{player}", player.getName())
+                                    .replace("{ip}", player.getIp())
+                    ).queue(msg -> future.complete(null), future::completeExceptionally),
+                    future::completeExceptionally
+            );
+        } else {
+            future.complete(null);
         }
+
+        return future;
     }
 
     @Override
