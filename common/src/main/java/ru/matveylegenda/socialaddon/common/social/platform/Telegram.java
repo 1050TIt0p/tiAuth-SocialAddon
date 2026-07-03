@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class Telegram extends Social implements LongPollingSingleThreadUpdateConsumer {
     @Getter
@@ -95,7 +96,9 @@ public class Telegram extends Social implements LongPollingSingleThreadUpdateCon
     }
 
     @Override
-    public void checkPlayer(String socialId, SocialPlayer player, boolean twoFaEnabled, boolean alertEnabled) {
+    public CompletableFuture<Void> checkPlayer(String socialId, SocialPlayer player, boolean twoFaEnabled, boolean alertEnabled) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
         if (twoFaEnabled) {
             InlineKeyboardButton allowButton = InlineKeyboardButton.builder()
                     .callbackData("allow-" + player.getName())
@@ -124,15 +127,21 @@ public class Telegram extends Social implements LongPollingSingleThreadUpdateCon
 
             try {
                 getTelegramClient().execute(message);
+                future.complete(null);
             } catch (TelegramApiException e) {
-                e.printStackTrace();
+                future.completeExceptionally(e);
             }
         } else if (alertEnabled) {
             sendMessage(socialId, TelegramConfig.IMP.messages.alert
                     .replace("{player}", player.getName())
                     .replace("{ip}", player.getIp())
             );
+            future.complete(null);
+        } else {
+            future.complete(null);
         }
+
+        return future;
     }
 
     @Override
