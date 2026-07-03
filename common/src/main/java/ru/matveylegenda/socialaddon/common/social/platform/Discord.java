@@ -87,13 +87,15 @@ public class Discord extends Social {
     }
 
     private void registerSlashCommands() {
+        var cfg = DiscordConfig.IMP.messages;
+
         jda.updateCommands().addCommands(
-                Commands.slash("unlink", "Отвязать аккаунт игрока")
-                        .addOption(OptionType.STRING, "player", "Ник игрока", true),
-                Commands.slash("alert", "Переключить уведомления о входе")
-                        .addOption(OptionType.STRING, "player", "Ник игрока", true),
-                Commands.slash("2fa", "Переключить двухфакторную аутентификацию")
-                        .addOption(OptionType.STRING, "player", "Ник игрока", true)
+                Commands.slash("unlink", cfg.commandUnlinkDescription)
+                        .addOption(OptionType.STRING, "player", cfg.commandPlayerOptionDescription, true),
+                Commands.slash("alert", cfg.commandAlertDescription)
+                        .addOption(OptionType.STRING, "player", cfg.commandPlayerOptionDescription, true),
+                Commands.slash("2fa", cfg.commandTwoFaDescription)
+                        .addOption(OptionType.STRING, "player", cfg.commandPlayerOptionDescription, true)
         ).queue();
 
         jda.addEventListener(new DiscordSlashCommandListener(database));

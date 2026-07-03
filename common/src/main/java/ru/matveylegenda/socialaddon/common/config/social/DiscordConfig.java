@@ -115,5 +115,11 @@ public class DiscordConfig extends YamlSerializable {
         public String twoFaDisabled = "Двухфакторная аутентификация для аккаунта {player} выключена";
 
         public String queryError = "Возникла ошибка при запросе к базе данных";
+
+        @NewLine
+        public String commandUnlinkDescription = "Отвязать аккаунт игрока";
+        public String commandAlertDescription = "Переключить уведомления о входе";
+        public String commandTwoFaDescription = "Переключить двухфакторную аутентификацию";
+        public String commandPlayerOptionDescription = "Ник игрока";
     }
 }
