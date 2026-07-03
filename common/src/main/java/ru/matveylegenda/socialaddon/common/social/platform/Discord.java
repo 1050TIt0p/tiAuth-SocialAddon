@@ -21,6 +21,8 @@ import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import java.util.concurrent.CompletableFuture;
 
 public class Discord extends Social {
@@ -80,6 +82,21 @@ public class Discord extends Social {
         }
 
         jda = jdaBuilder.build();
+
+        registerSlashCommands();
+    }
+
+    private void registerSlashCommands() {
+        jda.updateCommands().addCommands(
+                Commands.slash("unlink", "Отвязать аккаунт игрока")
+                        .addOption(OptionType.STRING, "player", "Ник игрока", true),
+                Commands.slash("alert", "Переключить уведомления о входе")
+                        .addOption(OptionType.STRING, "player", "Ник игрока", true),
+                Commands.slash("2fa", "Переключить двухфакторную аутентификацию")
+                        .addOption(OptionType.STRING, "player", "Ник игрока", true)
+        ).queue();
+
+        jda.addEventListener(new DiscordSlashCommandListener(database));
     }
 
     @Override

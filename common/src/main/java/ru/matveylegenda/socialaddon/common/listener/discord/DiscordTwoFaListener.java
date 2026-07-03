@@ -22,9 +22,9 @@ public class DiscordTwoFaListener extends ListenerAdapter {
 
         User discordUser = event.getAuthor();
         Message message = event.getMessage();
-        String[] messageSplit = message.getContentRaw().split(" ");
+        String[] messageSplit = message.getContentRaw().strip().split("\\s+");
 
-        if (messageSplit.length != 2) {
+        if (messageSplit.length < 2) {
             return;
         }
 
