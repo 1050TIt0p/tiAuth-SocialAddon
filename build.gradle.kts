@@ -26,7 +26,7 @@ subprojects {
         compileOnly("net.kyori:adventure-text-minimessage:5.2.0")
         compileOnly("net.kyori:adventure-text-serializer-legacy:5.2.0")
 
-        implementation("net.dv8tion:JDA:6.4.2") {
+        implementation("net.dv8tion:JDA:6.5.0") {
             exclude(module = "opus-java")
         }
         implementation("org.telegram:telegrambots-client:10.0.0")
