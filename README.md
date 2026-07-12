@@ -1,36 +1,36 @@
 # tiAuth-SocialAddon
 
-Аддон для **[tiAuth](https://github.com/1050TIt0p/tiAuth)**, добавляющий интеграцию с соц. сетями (Discord, Telegram) для обеспечения безопасности ваших игроков.
-Аддон находится в стадии активной разработки, функционал будет дополняться. В будущем возможно слияние с самим **[tiAuth](https://github.com/1050TIt0p/tiAuth)** (но это не точно)
+An addon for **[tiAuth](https://github.com/1050TIt0p/tiAuth)** that adds social network integration (Discord, Telegram) to enhance your players' security.
+The addon is in active development; functionality will be expanded. In the future, it may merge with **[tiAuth](https://github.com/1050TIt0p/tiAuth)** itself (but that's not certain).
 
-**Платформы:** Velocity, BungeeCord (включая форки, такие как NullCordX).
-
----
-
-### Функции
-1. **Уведомления:** Оповещение о входах на сервер.
-2. **Двухфакторная аутентификация (2FA):** Подтверждение входа через соц. сеть.
-3. **Управление доступом:** Смена пароля и кик игрока через команды соц. сети.
+**Platforms:** Velocity, BungeeCord (including forks such as NullCordX).
 
 ---
 
-### Инструкция для игроков
-
-1. **Привязка аккаунта:**
-   Пропишите команду `/link <telegram|discord>` (если на сервере включена только одна соц. сеть, указывать её необязательно).
-   > *Команда `/link` может настраиваться в `config.yml`*
-
-2. **Активация:**
-   Отправьте выданный код вашему боту.
-
-3. **Готово!**
-
-#### Управление:
-* **Telegram:** Основное управление через кнопки и клавиатуру в интерфейсе бота. Команды: `/unlink <ник>`
-* **Discord:** Основное управление через команды (в ближайшее время будет изменено для уменьшения разрыва с Telegram). Команды (`/alert <ник>`, `/2fa <ник>`, `/unlink <ник>`).
+### Features
+1. **Notifications:** Alerts when players join the server.
+2. **Two-Factor Authentication (2FA):** Confirm login via social network.
+3. **Access Control:** Change password and kick players through social network commands.
 
 ---
 
-### Предупреждения
-* Discord и Telegram бот *возможно* не будут работать, если у вас хостинг в России. Для исправления используйте SOCKS5 прокси (указывается в конфиге соц. сети) 
-* Возможны проблемы с отображением BossBar на BungeeCord (adventure issue!!!)
+### Player Guide
+
+1. **Linking an Account:**
+   Run the command `/link <telegram|discord>` (if only one social network is enabled on the server, specifying it is optional).
+   > *The `/link` command can be configured in `config.yml`*
+
+2. **Activation:**
+   Send the generated code to your bot.
+
+3. **Done!**
+
+#### Management:
+* **Telegram:** Main management via buttons and keyboard in the bot interface. Commands: `/unlink <nick>`
+* **Discord:** Main management via commands (will be changed soon to reduce the gap with Telegram). Commands (`/alert <nick>`, `/2fa <nick>`, `/unlink <nick>`).
+
+---
+
+### Warnings
+* Discord and Telegram bots *may* not work if your hosting is in Russia. To fix this, use a SOCKS5 proxy (specified in the social network config).
+* Possible issues with BossBar display on BungeeCord (adventure issue!!!)
