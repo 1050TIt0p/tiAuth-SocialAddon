@@ -2,12 +2,13 @@ package ru.matveylegenda.socialaddon.common.database.repository;
 
 import ru.matveylegenda.socialaddon.common.database.Database;
 import ru.matveylegenda.socialaddon.common.database.model.DiscordUser;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.dao.Dao;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.dao.DaoManager;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.support.ConnectionSource;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.table.TableUtils;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -16,19 +17,37 @@ import java.util.logging.Level;
 
 public class DiscordUserRepository {
     private final ExecutorService executor;
-    private final Dao<DiscordUser, String> discordUserDao;
+    private final DataSource dataSource;
 
-    public DiscordUserRepository(ConnectionSource connectionSource, ExecutorService executor) throws SQLException {
-        discordUserDao = DaoManager.createDao(connectionSource, DiscordUser.class);
-        TableUtils.createTableIfNotExists(connectionSource, DiscordUser.class);
+    public DiscordUserRepository(DataSource dataSource, ExecutorService executor) throws SQLException {
+        this.dataSource = dataSource;
         this.executor = executor;
+        createTable();
+    }
+
+    private void createTable() throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS discord_users (" +
+                    "username VARCHAR(255) PRIMARY KEY," +
+                    "discordId VARCHAR(255) NOT NULL," +
+                    "twoFa BOOLEAN DEFAULT FALSE," +
+                    "alert BOOLEAN DEFAULT FALSE" +
+                    ")"
+            );
+        }
     }
 
     public CompletableFuture<Boolean> addUser(String playerName, String discordId) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                DiscordUser user = new DiscordUser(playerName, discordId);
-                discordUserDao.create(user);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "INSERT INTO discord_users (username, discordId) VALUES (?, ?)"
+                 )) {
+                statement.setString(1, playerName);
+                statement.setString(2, discordId);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error adding discord user", e);
@@ -39,8 +58,12 @@ public class DiscordUserRepository {
 
     public CompletableFuture<Boolean> removeUser(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                discordUserDao.deleteById(playerName);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "DELETE FROM discord_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error removing discord user", e);
@@ -51,8 +74,17 @@ public class DiscordUserRepository {
 
     public CompletableFuture<DiscordUser> getUserByPlayerName(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                return discordUserDao.queryForId(playerName);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT * FROM discord_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return mapDiscordUser(resultSet);
+                    }
+                    return null;
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting discord user", e);
                 return null;
@@ -62,9 +94,17 @@ public class DiscordUserRepository {
 
     public CompletableFuture<String> getIdByPlayerName(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                DiscordUser user = discordUserDao.queryForId(playerName);
-                return user != null ? user.getDiscordId() : null;
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT discordId FROM discord_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("discordId");
+                    }
+                    return null;
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting discord ID", e);
                 return null;
@@ -74,12 +114,17 @@ public class DiscordUserRepository {
 
     public CompletableFuture<Integer> getAccountCountById(String discordId) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                long count = discordUserDao.queryBuilder()
-                        .where()
-                        .eq("discordId", discordId)
-                        .countOf();
-                return (int) count;
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT COUNT(*) FROM discord_users WHERE discordId = ?"
+                 )) {
+                statement.setString(1, discordId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getInt(1);
+                    }
+                    return 0;
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting account count", e);
                 return 0;
@@ -89,17 +134,18 @@ public class DiscordUserRepository {
 
     public CompletableFuture<List<String>> getAccountsById(String discordId) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                List<DiscordUser> users = discordUserDao.queryBuilder()
-                        .where()
-                        .eq("discordId", discordId)
-                        .query();
-
-                List<String> playerNames = new ArrayList<>();
-                for (DiscordUser user : users) {
-                    playerNames.add(user.getUsername());
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT username FROM discord_users WHERE discordId = ?"
+                 )) {
+                statement.setString(1, discordId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    List<String> playerNames = new ArrayList<>();
+                    while (resultSet.next()) {
+                        playerNames.add(resultSet.getString("username"));
+                    }
+                    return playerNames;
                 }
-                return playerNames;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting accounts list", e);
                 return new ArrayList<>();
@@ -109,9 +155,14 @@ public class DiscordUserRepository {
 
     public CompletableFuture<Boolean> isTwoFaEnabled(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                DiscordUser user = discordUserDao.queryForId(playerName);
-                return user != null && user.isTwoFa();
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT twoFa FROM discord_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return resultSet.next() && resultSet.getBoolean("twoFa");
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error checking 2FA status", e);
                 return false;
@@ -121,9 +172,14 @@ public class DiscordUserRepository {
 
     public CompletableFuture<Boolean> isAlertEnabled(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                DiscordUser user = discordUserDao.queryForId(playerName);
-                return user != null && user.isAlert();
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT alert FROM discord_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return resultSet.next() && resultSet.getBoolean("alert");
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error checking alert status", e);
                 return false;
@@ -133,14 +189,13 @@ public class DiscordUserRepository {
 
     public CompletableFuture<Boolean> setTwoFaEnabled(String playerName, boolean enabled) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                DiscordUser user = discordUserDao.queryForId(playerName);
-                if (user == null) {
-                    return false;
-                }
-
-                user.setTwoFa(enabled);
-                discordUserDao.update(user);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE discord_users SET twoFa = ? WHERE username = ?"
+                 )) {
+                statement.setBoolean(1, enabled);
+                statement.setString(2, playerName);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error updating 2FA status for " + playerName, e);
@@ -151,19 +206,27 @@ public class DiscordUserRepository {
 
     public CompletableFuture<Boolean> setAlertEnabled(String playerName, boolean enabled) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                DiscordUser user = discordUserDao.queryForId(playerName);
-                if (user == null) {
-                    return false;
-                }
-
-                user.setAlert(enabled);
-                discordUserDao.update(user);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE discord_users SET alert = ? WHERE username = ?"
+                 )) {
+                statement.setBoolean(1, enabled);
+                statement.setString(2, playerName);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error updating alert status for " + playerName, e);
                 return false;
             }
         }, executor);
+    }
+
+    private DiscordUser mapDiscordUser(ResultSet resultSet) throws SQLException {
+        DiscordUser user = new DiscordUser();
+        user.setUsername(resultSet.getString("username"));
+        user.setDiscordId(resultSet.getString("discordId"));
+        user.setTwoFa(resultSet.getBoolean("twoFa"));
+        user.setAlert(resultSet.getBoolean("alert"));
+        return user;
     }
 }

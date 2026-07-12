@@ -62,7 +62,7 @@ public final class SocialAddon extends Plugin {
         try {
             this.database = new Database(
                     TiAuthAPI.getInstance().getDatabase(),
-                    TiAuthAPI.getInstance().getDatabase().getConnectionSource(),
+                    TiAuthAPI.getInstance().getDatabase().getDataSource(),
                     TiAuthAPI.getInstance().getDatabase().getExecutor()
             );
         } catch (SQLException e) {

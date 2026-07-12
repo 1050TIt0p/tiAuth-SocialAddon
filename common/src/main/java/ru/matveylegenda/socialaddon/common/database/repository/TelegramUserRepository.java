@@ -2,12 +2,13 @@ package ru.matveylegenda.socialaddon.common.database.repository;
 
 import ru.matveylegenda.socialaddon.common.database.Database;
 import ru.matveylegenda.socialaddon.common.database.model.TelegramUser;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.dao.Dao;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.dao.DaoManager;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.support.ConnectionSource;
-import ru.matveylegenda.tiauth.thirdparty.com.j256.ormlite.table.TableUtils;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -16,19 +17,37 @@ import java.util.logging.Level;
 
 public class TelegramUserRepository {
     private final ExecutorService executor;
-    private final Dao<TelegramUser, String> telegramUserDao;
+    private final DataSource dataSource;
 
-    public TelegramUserRepository(ConnectionSource connectionSource, ExecutorService executor) throws SQLException {
-        telegramUserDao = DaoManager.createDao(connectionSource, TelegramUser.class);
-        TableUtils.createTableIfNotExists(connectionSource, TelegramUser.class);
+    public TelegramUserRepository(DataSource dataSource, ExecutorService executor) throws SQLException {
+        this.dataSource = dataSource;
         this.executor = executor;
+        createTable();
+    }
+
+    private void createTable() throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS telegram_users (" +
+                    "username VARCHAR(255) PRIMARY KEY," +
+                    "telegramId VARCHAR(255) NOT NULL," +
+                    "twoFa BOOLEAN DEFAULT FALSE," +
+                    "alert BOOLEAN DEFAULT FALSE" +
+                    ")"
+            );
+        }
     }
 
     public CompletableFuture<Boolean> addUser(String playerName, String telegramId) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                TelegramUser user = new TelegramUser(playerName, telegramId);
-                telegramUserDao.create(user);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "INSERT INTO telegram_users (username, telegramId) VALUES (?, ?)"
+                 )) {
+                statement.setString(1, playerName);
+                statement.setString(2, telegramId);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error adding telegram user", e);
@@ -39,8 +58,12 @@ public class TelegramUserRepository {
 
     public CompletableFuture<Boolean> removeUser(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                telegramUserDao.deleteById(playerName);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "DELETE FROM telegram_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error removing telegram user", e);
@@ -51,8 +74,17 @@ public class TelegramUserRepository {
 
     public CompletableFuture<TelegramUser> getUserByPlayerName(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                return telegramUserDao.queryForId(playerName);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT * FROM telegram_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return mapTelegramUser(resultSet);
+                    }
+                    return null;
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting telegram user", e);
                 return null;
@@ -62,9 +94,17 @@ public class TelegramUserRepository {
 
     public CompletableFuture<String> getIdByPlayerName(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                TelegramUser user = telegramUserDao.queryForId(playerName);
-                return user != null ? user.getTelegramId() : null;
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT telegramId FROM telegram_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("telegramId");
+                    }
+                    return null;
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting telegram ID", e);
                 return null;
@@ -74,12 +114,17 @@ public class TelegramUserRepository {
 
     public CompletableFuture<Integer> getAccountCountById(String telegramId) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                long count = telegramUserDao.queryBuilder()
-                        .where()
-                        .eq("telegramId", telegramId)
-                        .countOf();
-                return (int) count;
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT COUNT(*) FROM telegram_users WHERE telegramId = ?"
+                 )) {
+                statement.setString(1, telegramId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getInt(1);
+                    }
+                    return 0;
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting account count", e);
                 return 0;
@@ -89,17 +134,18 @@ public class TelegramUserRepository {
 
     public CompletableFuture<List<String>> getAccountsById(String telegramId) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                List<TelegramUser> users = telegramUserDao.queryBuilder()
-                        .where()
-                        .eq("telegramId", telegramId)
-                        .query();
-
-                List<String> playerNames = new ArrayList<>();
-                for (TelegramUser user : users) {
-                    playerNames.add(user.getUsername());
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT username FROM telegram_users WHERE telegramId = ?"
+                 )) {
+                statement.setString(1, telegramId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    List<String> playerNames = new ArrayList<>();
+                    while (resultSet.next()) {
+                        playerNames.add(resultSet.getString("username"));
+                    }
+                    return playerNames;
                 }
-                return playerNames;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error getting accounts list", e);
                 return new ArrayList<>();
@@ -109,9 +155,14 @@ public class TelegramUserRepository {
 
     public CompletableFuture<Boolean> isTwoFaEnabled(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                TelegramUser user = telegramUserDao.queryForId(playerName);
-                return user != null && user.isTwoFa();
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT twoFa FROM telegram_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return resultSet.next() && resultSet.getBoolean("twoFa");
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error checking 2FA status", e);
                 return false;
@@ -121,9 +172,14 @@ public class TelegramUserRepository {
 
     public CompletableFuture<Boolean> isAlertEnabled(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                TelegramUser user = telegramUserDao.queryForId(playerName);
-                return user != null && user.isAlert();
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT alert FROM telegram_users WHERE username = ?"
+                 )) {
+                statement.setString(1, playerName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return resultSet.next() && resultSet.getBoolean("alert");
+                }
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error checking alert status", e);
                 return false;
@@ -133,14 +189,13 @@ public class TelegramUserRepository {
 
     public CompletableFuture<Boolean> setTwoFaEnabled(String playerName, boolean enabled) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                TelegramUser user = telegramUserDao.queryForId(playerName);
-                if (user == null) {
-                    return false;
-                }
-
-                user.setTwoFa(enabled);
-                telegramUserDao.update(user);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE telegram_users SET twoFa = ? WHERE username = ?"
+                 )) {
+                statement.setBoolean(1, enabled);
+                statement.setString(2, playerName);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error updating 2FA status for " + playerName, e);
@@ -151,19 +206,27 @@ public class TelegramUserRepository {
 
     public CompletableFuture<Boolean> setAlertEnabled(String playerName, boolean enabled) {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                TelegramUser user = telegramUserDao.queryForId(playerName);
-                if (user == null) {
-                    return false;
-                }
-
-                user.setAlert(enabled);
-                telegramUserDao.update(user);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE telegram_users SET alert = ? WHERE username = ?"
+                 )) {
+                statement.setBoolean(1, enabled);
+                statement.setString(2, playerName);
+                statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
                 Database.LOGGER.log(Level.WARNING, "Error updating alert status for " + playerName, e);
                 return false;
             }
         }, executor);
+    }
+
+    private TelegramUser mapTelegramUser(ResultSet resultSet) throws SQLException {
+        TelegramUser user = new TelegramUser();
+        user.setUsername(resultSet.getString("username"));
+        user.setTelegramId(resultSet.getString("telegramId"));
+        user.setTwoFa(resultSet.getBoolean("twoFa"));
+        user.setAlert(resultSet.getBoolean("alert"));
+        return user;
     }
 }
