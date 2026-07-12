@@ -101,7 +101,7 @@ public class TelegramConfig extends YamlSerializable {
 
         public String accountLimitReached = "К вашему Telegram привязано максимальное количество аккаунтов";
 
-        public String accountLinked = "Telegram успешно привязан к аккаунту {player}";
+        public String codeAccept = "Код принят. Для завершения привязки напишите на сервере: /link accept";
         public String accountUnlinked = "Аккаунт {player} успешно отвязан от вашего Telegram";
 
         public String accountNotFound = "Аккаунт не привязан или не принадлежит вам";

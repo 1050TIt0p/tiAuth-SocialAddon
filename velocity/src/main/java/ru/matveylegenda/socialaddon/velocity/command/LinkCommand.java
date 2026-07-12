@@ -4,6 +4,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import ru.matveylegenda.socialaddon.common.cache.CodeCache;
+import ru.matveylegenda.socialaddon.common.cache.LinkConfirmCache;
 import ru.matveylegenda.socialaddon.common.config.MessagesConfig;
 import ru.matveylegenda.socialaddon.common.config.social.DiscordConfig;
 import ru.matveylegenda.socialaddon.common.config.social.TelegramConfig;
@@ -27,6 +28,69 @@ public class LinkCommand implements SimpleCommand {
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Utils.LEGACY.deserialize(COLORIZER.colorize(MessagesConfig.IMP.onlyForPlayer)));
+            return;
+        }
+
+        if (invocation.arguments().length == 1 && invocation.arguments()[0].equalsIgnoreCase("accept")) {
+
+            LinkConfirmCache.LinkRequest request = LinkConfirmCache.get(player.getUsername());
+
+            if (request == null) {
+                sender.sendMessage(Utils.LEGACY.deserialize(
+                        COLORIZER.colorize(
+                                COLORIZER.colorize(
+                                        MessagesConfig.IMP.noLinkConfirmation
+                                )
+                        )
+                ));
+                return;
+            }
+
+            switch (request.platform()) {
+
+                case "discord" -> {
+                    plugin.getDatabase().getDiscordUserRepository().addUser(player.getUsername(), request.accountId()).thenAccept(success -> {
+                        if (!success) {
+                            sender.sendMessage(Utils.LEGACY.deserialize(
+                                    COLORIZER.colorize(
+                                            MessagesConfig.IMP.queryError
+                                    )
+                            ));
+                            return;
+                        }
+
+                        LinkConfirmCache.remove(player.getUsername());
+
+                        sender.sendMessage(Utils.LEGACY.deserialize(
+                                COLORIZER.colorize(
+                                        MessagesConfig.IMP.discord.accountLinked
+                                )
+                        ));
+                    });
+                }
+
+                case "telegram" -> {
+                    plugin.getDatabase().getTelegramUserRepository().addUser(player.getUsername(), request.accountId()).thenAccept(success -> {
+                        if (!success) {
+                            sender.sendMessage(Utils.LEGACY.deserialize(
+                                    COLORIZER.colorize(
+                                            MessagesConfig.IMP.queryError
+                                    )
+                            ));
+                            return;
+                        }
+
+                        LinkConfirmCache.remove(player.getUsername());
+
+                        sender.sendMessage(Utils.LEGACY.deserialize(
+                                COLORIZER.colorize(
+                                        MessagesConfig.IMP.telegram.accountLinked
+                                )
+                        ));
+                    });
+                }
+            }
+
             return;
         }
 

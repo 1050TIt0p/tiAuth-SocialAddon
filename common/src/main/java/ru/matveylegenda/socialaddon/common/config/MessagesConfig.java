@@ -23,6 +23,7 @@ public class MessagesConfig extends YamlSerializable {
         this.telegram = new Telegram();
     }
 
+    public String queryError = "&#8833EC2ꜰᴀ &8» &fПроизошла ошибка при запросе к базе данных. Сообщите администрации!";
     public String onlyForPlayer = "&#8833EC2ꜰᴀ &8» &fКоманда доступна только игрокам";
     public String usage = "&#8833EC2ꜰᴀ &8» &fИспользование: &#8833EC/link <discord|telegram>";
     public String alreadyLinked = "&#8833EC2ꜰᴀ &8» &fВаш аккаунт уже привязан к соц. сети";
@@ -31,18 +32,21 @@ public class MessagesConfig extends YamlSerializable {
     public String timeout = "&#8833EC2ꜰᴀ &8» &fВы не успели подтвердить вход";
     public String reminder = "&#8833EC2ꜰᴀ &8» &fПодтвердите вход через соц. сеть";
     public String joinToLinkedOnlyServer = "&#8833EC2ꜰᴀ &8» &fДля входа на данный сервер вам нужно привязать аккаунт к соц. сети через команду &#8833EC2/link";
+    public String noLinkConfirmation = "&#8833EC2ꜰᴀ &8» &fНет ожидающих привязок";
 
     public Discord discord;
 
     @NewLine
     public static class Discord {
-        public String code = "Ваш код: {code}\nОтправьте его боту example#0000";
+        public String code = "&#8833EC2ꜰᴀ &8» &fВаш код: {code}\nОтправьте его боту example#0000";
+        public String accountLinked = "&#8833EC2ꜰᴀ &8» &fАккаунт успешно привязан к &#8833ECDiscord";
     }
 
     public Telegram telegram;
 
     @NewLine
     public static class Telegram {
-        public String code = "Ваш код: {code}\nОтправьте его боту @example";
+        public String code = "&#8833EC2ꜰᴀ &8» &fВаш код: {code}\nОтправьте его боту @example";
+        public String accountLinked = "&#8833EC2ꜰᴀ &8» &fАккаунт успешно привязан к &#8833ECTelegram";
     }
 }

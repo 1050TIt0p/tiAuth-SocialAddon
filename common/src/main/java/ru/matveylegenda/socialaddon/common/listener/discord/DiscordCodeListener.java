@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import ru.matveylegenda.socialaddon.common.cache.CodeCache;
+import ru.matveylegenda.socialaddon.common.cache.LinkConfirmCache;
 import ru.matveylegenda.socialaddon.common.config.social.DiscordConfig;
 import ru.matveylegenda.socialaddon.common.database.Database;
 
@@ -33,17 +34,27 @@ public class DiscordCodeListener extends ListenerAdapter {
                     return;
                 }
 
-                database.getDiscordUserRepository().addUser(playerName, user.getId()).thenAccept(success -> {
-                    if (!success) {
-                        message.reply(DiscordConfig.IMP.messages.queryError)
-                                .queue();
-                        return;
-                    }
+                CodeCache.removeCode(message.getContentRaw());
+                LinkConfirmCache.add(
+                        playerName,
+                        new LinkConfirmCache.LinkRequest("discord", user.getId())
+                );
 
-                    CodeCache.removeCode(message.getContentRaw());
-                    message.reply(DiscordConfig.IMP.messages.accountLinked.replace("{player}", playerName))
-                            .queue();
-                });
+                message.reply(
+                        DiscordConfig.IMP.messages.codeAccept
+                ).queue();
+//
+//                database.getDiscordUserRepository().addUser(playerName, user.getId()).thenAccept(success -> {
+//                    if (!success) {
+//                        message.reply(DiscordConfig.IMP.messages.queryError)
+//                                .queue();
+//                        return;
+//                    }
+//
+//                    CodeCache.removeCode(message.getContentRaw());
+//                    message.reply(DiscordConfig.IMP.messages.accountLinked.replace("{player}", playerName))
+//                            .queue();
+//                });
             });
         }
     }

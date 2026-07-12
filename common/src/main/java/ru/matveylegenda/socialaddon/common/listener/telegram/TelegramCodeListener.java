@@ -3,6 +3,7 @@ package ru.matveylegenda.socialaddon.common.listener.telegram;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import ru.matveylegenda.socialaddon.common.cache.CodeCache;
+import ru.matveylegenda.socialaddon.common.cache.LinkConfirmCache;
 import ru.matveylegenda.socialaddon.common.config.social.TelegramConfig;
 import ru.matveylegenda.socialaddon.common.database.Database;
 import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
@@ -30,18 +31,29 @@ public class TelegramCodeListener {
                     return;
                 }
 
-                database.getTelegramUserRepository().addUser(playerName, chatId).thenAccept(success -> {
-                    if (!success) {
-                        Telegram.sendMessage(chatId, TelegramConfig.IMP.messages.queryError);
-                        return;
-                    }
+                CodeCache.removeCode(message.getText());
+                LinkConfirmCache.add(
+                        playerName,
+                        new LinkConfirmCache.LinkRequest("telegram", chatId)
+                );
 
-                    CodeCache.removeCode(message.getText());
                     Telegram.sendMessage(
                             chatId,
-                            TelegramConfig.IMP.messages.accountLinked.replace("{player}", playerName)
+                            TelegramConfig.IMP.messages.codeAccept
                     );
-                });
+
+//                database.getTelegramUserRepository().addUser(playerName, chatId).thenAccept(success -> {
+//                    if (!success) {
+//                        Telegram.sendMessage(chatId, TelegramConfig.IMP.messages.queryError);
+//                        return;
+//                    }
+//
+//                    CodeCache.removeCode(message.getText());
+//                    Telegram.sendMessage(
+//                            chatId,
+//                            TelegramConfig.IMP.messages.accountLinked.replace("{player}", playerName)
+//                    );
+//                });
             });
         }
     }

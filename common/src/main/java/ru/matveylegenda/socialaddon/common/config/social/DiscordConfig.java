@@ -103,7 +103,7 @@ public class DiscordConfig extends YamlSerializable {
 
         public String accountLimitReached = "К вашему Discord привязано максимальное количество аккаунтов";
 
-        public String accountLinked = "Discord успешно привязан к аккаунту {player}";
+        public String codeAccept = "Код принят. Для завершения привязки напишите на сервере: /link accept";
         public String accountUnlinked = "Аккаунт {player} успешно отвязан от вашего Discord";
 
         public String accountNotFound = "Аккаунт не привязан или не принадлежит вам";
