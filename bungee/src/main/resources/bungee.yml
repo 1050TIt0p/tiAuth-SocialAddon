@@ -1,6 +1,6 @@
 name: tiAuth-SocialAddon
 author: 1050TI_top
-version: 1.0.2
+version: 1.0.3
 main: ru.matveylegenda.socialaddon.bungee.SocialAddon
 libraries:
   - net.kyori:adventure-platform-bungeecord:4.4.1
