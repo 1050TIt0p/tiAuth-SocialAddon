@@ -21,6 +21,7 @@ public class MessagesConfig extends YamlSerializable {
         super(Paths.get("plugins/tiAuth-SocialAddon/messages.yml"), CONFIG);
         this.discord = new Discord();
         this.telegram = new Telegram();
+        this.max = new Max();
     }
 
     public String queryError = "&#8833EC2ꜰᴀ &8» &fПроизошла ошибка при запросе к базе данных. Сообщите администрации!";
@@ -48,5 +49,13 @@ public class MessagesConfig extends YamlSerializable {
     public static class Telegram {
         public String code = "&#8833EC2ꜰᴀ &8» &fВаш код: {code}\nОтправьте его боту @example";
         public String accountLinked = "&#8833EC2ꜰᴀ &8» &fАккаунт успешно привязан к &#8833ECTelegram";
+    }
+
+    public Max max;
+
+    @NewLine
+    public static class Max {
+        public String code = "&#8833EC2ꜰᴀ &8» &fВаш код: {code}\nОтправьте его боту @example";
+        public String accountLinked = "&#8833EC2ꜰᴀ &8» &fАккаунт успешно привязан к &#8833ECMax";
     }
 }

@@ -9,6 +9,7 @@ import ru.matveylegenda.socialaddon.common.cache.CodeCache;
 import ru.matveylegenda.socialaddon.common.cache.LinkConfirmCache;
 import ru.matveylegenda.socialaddon.common.config.MessagesConfig;
 import ru.matveylegenda.socialaddon.common.config.social.DiscordConfig;
+import ru.matveylegenda.socialaddon.common.config.social.MaxConfig;
 import ru.matveylegenda.socialaddon.common.config.social.TelegramConfig;
 import ru.matveylegenda.tiauth.bungee.storage.CachedMessages;
 
@@ -89,72 +90,115 @@ public class LinkCommand extends Command {
                                 ));
                             });
                 }
+
+                case "max" -> {
+                    plugin.getDatabase().getMaxUserRepository().addUser(player.getName(), request.accountId()).thenAccept(success -> {
+                        if (!success) {
+                            sender.sendMessage(TextComponent.fromLegacy(
+                                    COLORIZER.colorize(
+                                            MessagesConfig.IMP.queryError
+                                    )
+                            ));
+                            return;
+                        }
+
+                        LinkConfirmCache.remove(player.getName());
+
+                        sender.sendMessage(TextComponent.fromLegacy(
+                                COLORIZER.colorize(
+                                        MessagesConfig.IMP.max.accountLinked
+                                )
+                        ));
+                    });
+                }
             }
 
             return;
         }
 
-        plugin.getDatabase().getDiscordUserRepository().getIdByPlayerName(player.getName()).thenAccept(discordId ->
-                plugin.getDatabase().getTelegramUserRepository().getIdByPlayerName(player.getName()).thenAccept(telegramId -> {
-            if (discordId != null || telegramId != null) {
-                sender.sendMessage(TextComponent.fromLegacy(
-                        COLORIZER.colorize(MessagesConfig.IMP.alreadyLinked)
-                ));
-                return;
-            }
+        plugin.getDatabase().getDiscordUserRepository().getIdByPlayerName(player.getName()).thenAccept(discordId -> {
+            plugin.getDatabase().getTelegramUserRepository().getIdByPlayerName(player.getName()).thenAccept(telegramId -> {
+                plugin.getDatabase().getMaxUserRepository().getIdByPlayerName(player.getName()).thenAccept(maxId -> {
+                    if (discordId != null || telegramId != null || maxId != null) {
+                        sender.sendMessage(TextComponent.fromLegacy(
+                                COLORIZER.colorize(MessagesConfig.IMP.alreadyLinked)
+                        ));
+                        return;
+                    }
 
-            if (!DiscordConfig.IMP.enabled && TelegramConfig.IMP.enabled) {
-                String code = CodeCache.addCode(player.getName());
-                sender.sendMessage(TextComponent.fromLegacy(
-                        COLORIZER.colorize(MessagesConfig.IMP.telegram.code
+                    if (!DiscordConfig.IMP.enabled && !MaxConfig.IMP.enabled && TelegramConfig.IMP.enabled) {
+                        String code = CodeCache.addCode(player.getName());
+                        sender.sendMessage(TextComponent.fromLegacy(
+                                COLORIZER.colorize(MessagesConfig.IMP.telegram.code
                                         .replace("{code}", code)
-                        )
-                ));
-                return;
-            }
+                                )
+                        ));
+                        return;
+                    }
 
-            if (!TelegramConfig.IMP.enabled && DiscordConfig.IMP.enabled) {
-                String code = CodeCache.addCode(player.getName());
-                sender.sendMessage(TextComponent.fromLegacy(
-                        COLORIZER.colorize(MessagesConfig.IMP.discord.code
-                                .replace("{code}", code)
-                        )
-                ));
-                return;
-            }
+                    if (!TelegramConfig.IMP.enabled && !MaxConfig.IMP.enabled && DiscordConfig.IMP.enabled) {
+                        String code = CodeCache.addCode(player.getName());
+                        sender.sendMessage(TextComponent.fromLegacy(
+                                COLORIZER.colorize(MessagesConfig.IMP.discord.code
+                                        .replace("{code}", code)
+                                )
+                        ));
+                        return;
+                    }
 
-            if (args.length != 1) {
-                sender.sendMessage(TextComponent.fromLegacy(
-                        COLORIZER.colorize(MessagesConfig.IMP.usage)
-                ));
-                return;
-            }
+                    if (!DiscordConfig.IMP.enabled && !TelegramConfig.IMP.enabled && MaxConfig.IMP.enabled) {
+                        String code = CodeCache.addCode(player.getName());
+                        sender.sendMessage(TextComponent.fromLegacy(
+                                COLORIZER.colorize(MessagesConfig.IMP.max.code
+                                        .replace("{code}", code)
+                                )
+                        ));
+                        return;
+                    }
 
-            String platform = args[0].toLowerCase(Locale.ROOT);
+                    if (args.length != 1) {
+                        sender.sendMessage(TextComponent.fromLegacy(
+                                COLORIZER.colorize(MessagesConfig.IMP.usage)
+                        ));
+                        return;
+                    }
 
-            switch (platform) {
-                case "discord" -> {
-                    String code = CodeCache.addCode(player.getName());
-                    sender.sendMessage(TextComponent.fromLegacy(
-                            COLORIZER.colorize(MessagesConfig.IMP.discord.code
+                    String platform = args[0].toLowerCase(Locale.ROOT);
+
+                    switch (platform) {
+                        case "discord" -> {
+                            String code = CodeCache.addCode(player.getName());
+                            sender.sendMessage(TextComponent.fromLegacy(
+                                    COLORIZER.colorize(MessagesConfig.IMP.discord.code
                                             .replace("{code}", code)
-                            )
-                    ));
-                }
+                                    )
+                            ));
+                        }
 
-                case "telegram" -> {
-                    String code = CodeCache.addCode(player.getName());
-                    sender.sendMessage(TextComponent.fromLegacy(
-                            COLORIZER.colorize(MessagesConfig.IMP.telegram.code
+                        case "telegram" -> {
+                            String code = CodeCache.addCode(player.getName());
+                            sender.sendMessage(TextComponent.fromLegacy(
+                                    COLORIZER.colorize(MessagesConfig.IMP.telegram.code
                                             .replace("{code}", code)
-                            )
-                    ));
-                }
+                                    )
+                            ));
+                        }
 
-                default -> player.sendMessage(TextComponent.fromLegacy(
-                        COLORIZER.colorize(MessagesConfig.IMP.usage)
-                ));
-            }
-        }));
+                        case "max" -> {
+                            String code = CodeCache.addCode(player.getName());
+                            sender.sendMessage(TextComponent.fromLegacy(
+                                    COLORIZER.colorize(MessagesConfig.IMP.max.code
+                                            .replace("{code}", code)
+                                    )
+                            ));
+                        }
+
+                        default -> player.sendMessage(TextComponent.fromLegacy(
+                                COLORIZER.colorize(MessagesConfig.IMP.usage)
+                        ));
+                    }
+                });
+            });
+        });
     }
 }

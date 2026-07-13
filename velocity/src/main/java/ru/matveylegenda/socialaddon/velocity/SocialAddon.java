@@ -13,10 +13,12 @@ import ru.matveylegenda.socialaddon.common.api.SocialPlatform;
 import ru.matveylegenda.socialaddon.common.config.MainConfig;
 import ru.matveylegenda.socialaddon.common.config.MessagesConfig;
 import ru.matveylegenda.socialaddon.common.config.social.DiscordConfig;
+import ru.matveylegenda.socialaddon.common.config.social.MaxConfig;
 import ru.matveylegenda.socialaddon.common.config.social.TelegramConfig;
 import ru.matveylegenda.socialaddon.common.database.Database;
 import ru.matveylegenda.socialaddon.common.manager.TaskManager;
 import ru.matveylegenda.socialaddon.common.social.platform.Discord;
+import ru.matveylegenda.socialaddon.common.social.platform.Max;
 import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
 import ru.matveylegenda.socialaddon.velocity.adapter.VelocityPlatformAdapter;
 import ru.matveylegenda.socialaddon.velocity.adapter.VelocitySchedulerAdapter;
@@ -50,6 +52,7 @@ public class SocialAddon {
 
     private Discord discord;
     private Telegram telegram;
+    private Max max;
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
@@ -61,9 +64,11 @@ public class SocialAddon {
         MessagesConfig.IMP.reload();
         DiscordConfig.IMP.reload();
         TelegramConfig.IMP.reload();
+        MaxConfig.IMP.reload();
 
         initializeDiscord();
         initializeTelegram();
+        initializeMax();
 
         registerListeners();
         registerCommands();
@@ -97,6 +102,16 @@ public class SocialAddon {
             telegram.enableBot();
         } catch (Exception e) {
             logger.error("Error starting the Telegram bot", e);
+            server.shutdown();
+        }
+    }
+
+    private void initializeMax() {
+        try {
+            max = new Max(taskManager, database, socialPlatform);
+            max.enableBot();
+        } catch (Exception e) {
+            logger.error("Error starting the Max bot", e);
             server.shutdown();
         }
     }
