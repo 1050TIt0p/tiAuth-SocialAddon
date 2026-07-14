@@ -34,17 +34,17 @@ public class MaxConfig extends YamlSerializable {
     public String token = "";
 
     @Comment({
-            @CommentValue("Максимальное количество привязанных аккаунтов к Telegram")
+            @CommentValue("Максимальное количество привязанных аккаунтов к Max")
     })
     public int maxLinkAccounts = 3;
 
     @Comment({
-            @CommentValue("Включать ли сразу 2FA после привязки аккаунта к Telegram")
+            @CommentValue("Включать ли сразу 2FA после привязки аккаунта к Max")
     })
     public boolean defaultEnableTwoFa = false;
 
     @Comment({
-            @CommentValue("Включать ли сразу отправку уведомлений о входе/выходе после привязки аккаунта к Telegram")
+            @CommentValue("Включать ли сразу отправку уведомлений о входе/выходе после привязки аккаунта к Max")
     })
     public boolean defaultEnableAlert = true;
 
