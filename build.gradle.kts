@@ -31,6 +31,7 @@ subprojects {
         }
         implementation("org.telegram:telegrambots-client:10.0.0")
         implementation("org.telegram:telegrambots-longpolling:10.0.0")
+        implementation("com.github.1050TIt0p:java-vk-bots-long-poll-api:4.1.9")
 
         compileOnly("org.projectlombok:lombok:1.18.46")
         annotationProcessor("org.projectlombok:lombok:1.18.46")
