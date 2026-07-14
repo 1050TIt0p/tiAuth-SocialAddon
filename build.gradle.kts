@@ -33,6 +33,10 @@ subprojects {
         implementation("org.telegram:telegrambots-longpolling:10.0.0")
         implementation("com.github.1050TIt0p:java-vk-bots-long-poll-api:4.1.9")
 
+        implementation("ru.etsft.max:max-bot-api-client:0.3.1")
+        implementation("ru.etsft.max:max-bot-api-jackson:0.3.1")
+        implementation("ru.etsft.max:max-bot-api-longpolling:0.3.1")
+
         compileOnly("org.projectlombok:lombok:1.18.46")
         annotationProcessor("org.projectlombok:lombok:1.18.46")
     }

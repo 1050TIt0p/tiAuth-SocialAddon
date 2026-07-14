@@ -10,8 +10,10 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import ru.matveylegenda.socialaddon.common.api.SocialPlayer;
 import ru.matveylegenda.socialaddon.common.config.MessagesConfig;
 import ru.matveylegenda.socialaddon.common.database.model.DiscordUser;
+import ru.matveylegenda.socialaddon.common.database.model.MaxUser;
 import ru.matveylegenda.socialaddon.common.database.model.TelegramUser;
 import ru.matveylegenda.socialaddon.common.social.platform.Discord;
+import ru.matveylegenda.socialaddon.common.social.platform.Max;
 import ru.matveylegenda.socialaddon.common.social.platform.Telegram;
 import ru.matveylegenda.socialaddon.common.utils.Utils;
 import ru.matveylegenda.socialaddon.velocity.SocialAddon;
@@ -35,11 +37,13 @@ public class AuthListener {
 
     private final Discord discord;
     private final Telegram telegram;
+    private final Max max;
 
     public AuthListener(SocialAddon plugin) {
         this.plugin = plugin;
         this.discord = plugin.getDiscord();
         this.telegram = plugin.getTelegram();
+        this.max = plugin.getMax();
     }
 
     @Subscribe(priority = -100)
@@ -55,6 +59,10 @@ public class AuthListener {
 
         plugin.getDatabase().getTelegramUserRepository().getUserByPlayerName(player.getUsername()).thenAccept(user -> {
             if (user != null) data.telegramUser = user;
+        });
+
+        plugin.getDatabase().getMaxUserRepository().getUserByPlayerName(player.getUsername()).thenAccept(user -> {
+            if (user != null) data.maxUser = user;
         });
     }
 
@@ -80,7 +88,7 @@ public class AuthListener {
         SocialUserData data = userCache.get(player.getUniqueId());
 
         if (ru.matveylegenda.socialaddon.common.config.MainConfig.IMP.linkedOnlyServers.contains(serverName)) {
-            if (data == null || (data.discordUser == null && data.telegramUser == null)) {
+            if (data == null || (data.discordUser == null && data.telegramUser == null && data.maxUser == null)) {
                 event.setResult(ServerPreConnectEvent.ServerResult.denied());
 
                 player.sendMessage(Utils.LEGACY.deserialize(
@@ -134,6 +142,16 @@ public class AuthListener {
             } else {
                 telegram.startTasks(socialPlayer);
             }
+        } else if (data.maxUser != null) {
+            max.checkPlayer(data.maxUser.getMaxId(), socialPlayer, data.maxUser.isTwoFa(), data.maxUser.isAlert());
+            if (!data.maxUser.isTwoFa()) {
+                AuthCache.setPendingVerification(player.getUsername());
+                event.setMoveToBackendServer(false);
+                AuthCache.logout(player.getUsername());
+                SessionCache.removePlayer(player.getUsername());
+            } else {
+                max.startTasks(socialPlayer);
+            }
         }
     }
 
@@ -167,11 +185,21 @@ public class AuthListener {
                 SessionCache.removePlayer(player.getUsername());
                 telegram.startTasks(socialPlayer);
             }
+        } else if (data.maxUser != null) {
+            max.checkPlayer(data.maxUser.getMaxId(), socialPlayer, data.maxUser.isTwoFa(), data.maxUser.isAlert());
+            if (data.maxUser.isTwoFa()) {
+                AuthCache.setPendingVerification(player.getUsername());
+                event.setMoveToBackendServer(false);
+                AuthCache.logout(player.getUsername());
+                SessionCache.removePlayer(player.getUsername());
+                max.startTasks(socialPlayer);
+            }
         }
     }
 
     public static class SocialUserData {
         public DiscordUser discordUser;
         public TelegramUser telegramUser;
+        public MaxUser maxUser;
     }
 }

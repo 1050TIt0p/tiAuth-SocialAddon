@@ -102,7 +102,7 @@ public class Telegram extends Social implements LongPollingSingleThreadUpdateCon
         if (twoFaEnabled) {
             InlineKeyboardButton allowButton = InlineKeyboardButton.builder()
                     .callbackData("allow-" + player.getName())
-                    .text(TelegramConfig.IMP.messages.twoFaAlert.buttons.allow.text)
+                        .text(TelegramConfig.IMP.messages.twoFaAlert.buttons.allow.text)
                     .build();
 
             InlineKeyboardButton denyButton = InlineKeyboardButton.builder()
