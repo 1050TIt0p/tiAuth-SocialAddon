@@ -20,7 +20,7 @@ subprojects {
     pluginManager.apply("java")
 
     dependencies {
-        compileOnly(rootProject.files("libs/tiAuth-1.4.1.jar"))
+        compileOnly(rootProject.files("libs/tiAuth-1.4.2.jar"))
 
         compileOnly("net.kyori:adventure-api:5.2.0")
         compileOnly("net.kyori:adventure-text-minimessage:5.2.0")
