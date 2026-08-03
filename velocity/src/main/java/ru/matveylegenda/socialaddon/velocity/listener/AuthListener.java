@@ -70,7 +70,7 @@ public class AuthListener {
     public void onPlayerDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
         userCache.remove(player.getUniqueId());
-        AuthCache.clearPendingVerification(player.getUsername());
+        AuthCache.endVerification(player.getUsername());
     }
 
     @Subscribe
@@ -106,7 +106,7 @@ public class AuthListener {
         if (!event.getServer().getServerInfo().getName().equals(MainConfig.IMP.servers.auth) &&
                 AuthCache.isAuthenticated(player.getUsername())) {
             plugin.getTaskManager().cancelTasks(socialPlayer);
-            AuthCache.clearPendingVerification(player.getUsername());
+            AuthCache.endVerification(player.getUsername());
         }
     }
 
@@ -125,7 +125,7 @@ public class AuthListener {
         if (data.discordUser != null) {
             discord.checkPlayer(data.discordUser.getDiscordId(), socialPlayer, data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (!data.discordUser.isTwoFa()) {
-                AuthCache.setPendingVerification(player.getUsername());
+                AuthCache.beginVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -135,7 +135,7 @@ public class AuthListener {
         } else if (data.telegramUser != null) {
             telegram.checkPlayer(data.telegramUser.getTelegramId(), socialPlayer, data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (!data.telegramUser.isTwoFa()) {
-                AuthCache.setPendingVerification(player.getUsername());
+                AuthCache.beginVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -145,7 +145,7 @@ public class AuthListener {
         } else if (data.maxUser != null) {
             max.checkPlayer(data.maxUser.getMaxId(), socialPlayer, data.maxUser.isTwoFa(), data.maxUser.isAlert());
             if (!data.maxUser.isTwoFa()) {
-                AuthCache.setPendingVerification(player.getUsername());
+                AuthCache.beginVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -170,7 +170,7 @@ public class AuthListener {
         if (data.discordUser != null) {
             discord.checkPlayer(data.discordUser.getDiscordId(), socialPlayer, data.discordUser.isTwoFa(), data.discordUser.isAlert());
             if (data.discordUser.isTwoFa()) {
-                AuthCache.setPendingVerification(player.getUsername());
+                AuthCache.beginVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -179,7 +179,7 @@ public class AuthListener {
         } else if (data.telegramUser != null) {
             telegram.checkPlayer(data.telegramUser.getTelegramId(), socialPlayer, data.telegramUser.isTwoFa(), data.telegramUser.isAlert());
             if (data.telegramUser.isTwoFa()) {
-                AuthCache.setPendingVerification(player.getUsername());
+                AuthCache.beginVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
@@ -188,7 +188,7 @@ public class AuthListener {
         } else if (data.maxUser != null) {
             max.checkPlayer(data.maxUser.getMaxId(), socialPlayer, data.maxUser.isTwoFa(), data.maxUser.isAlert());
             if (data.maxUser.isTwoFa()) {
-                AuthCache.setPendingVerification(player.getUsername());
+                AuthCache.beginVerification(player.getUsername());
                 event.setMoveToBackendServer(false);
                 AuthCache.logout(player.getUsername());
                 SessionCache.removePlayer(player.getUsername());
