@@ -29,8 +29,8 @@ subprojects {
         implementation("net.dv8tion:JDA:6.4.2") {
             exclude(module = "opus-java")
         }
-        implementation("org.telegram:telegrambots-client:10.0.0")
-        implementation("org.telegram:telegrambots-longpolling:10.0.0")
+        implementation("org.telegram:telegrambots-client:10.2.1")
+        implementation("org.telegram:telegrambots-longpolling:10.2.1")
         implementation("com.github.1050TIt0p:java-vk-bots-long-poll-api:4.1.9")
 
         implementation("ru.etsft.max:max-bot-api-client:0.3.1")
