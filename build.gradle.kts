@@ -37,8 +37,8 @@ subprojects {
         implementation("ru.etsft.max:max-bot-api-jackson:0.3.1")
         implementation("ru.etsft.max:max-bot-api-longpolling:0.3.1")
 
-        compileOnly("org.projectlombok:lombok:1.18.46")
-        annotationProcessor("org.projectlombok:lombok:1.18.46")
+        compileOnly("org.projectlombok:lombok:1.18.48")
+        annotationProcessor("org.projectlombok:lombok:1.18.48")
     }
 
     extensions.configure<JavaPluginExtension> {
